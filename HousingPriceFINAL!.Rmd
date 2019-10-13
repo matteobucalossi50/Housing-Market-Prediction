@@ -1,0 +1,210 @@
+---
+title: "Housing Price EDA (20,000+ entries)"
+author: "Daniel Frey"
+date: "10/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE}
+loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.packages(x,dep=T,repos="http://cran.us.r-project.org"); if(!require(x,character.only=T)) stop("Package not found") } }
+```
+
+```{r, echo=FALSE}
+library(readr)
+kc_house_data <- read_csv("~/Desktop/kc_house_data.csv")
+View(kc_house_data)
+
+```
+
+```{r, echo=FALSE}
+summary(kc_house_data$price)
+
+print(mode(kc_house_data$price))
+
+print(sd(kc_house_data$price))
+
+print(var(kc_house_data$price))
+
+
+
+```
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+
+hist(kc_house_data$price, xaxt="n", ylim = c(0,14000), col = "green", main = "Housing Price Histogram", xlab = "Housing Price ($)", cex.axis = .75)
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+
+library(grDevices)
+library(scales)
+
+options(scipen = 999)
+
+hist(kc_house_data$price[kc_house_data$price<=2000000], xaxt="n", ylim = c(0,5000), col = heat.colors(20), main = "Housing Price Histogram, $0-$2M Only", xlab = "Housing Price ($)", cex.axis = .75)
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+
+```
+
+
+```{r, echo=FALSE}
+qqnorm(kc_house_data$price, pch = 20, cex = .5, main = "Housing Prices: Normal Q-Q Plot", ylab = "Housing Price ($)", cex.axis = .75)
+
+
+plot(kc_house_data$sqft_living, kc_house_data$price, xaxt="n", yaxt="n", pch = 20, cex = .1, xlab = "Square Feet of Living Space", ylab = "Housing Price ($)", cex.axis = .75, main = "Housing Price vs. Living Space")
+abline(lm(kc_house_data$price ~ kc_house_data$sqft_living, data = kc_house_data), col = "orange")
+legend(x='topright', legend=paste('Correlation =',round(cor(kc_house_data$sqft_living, kc_house_data$price),5)))
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+axis(side=2, at=axTicks(2), 
+     labels=formatC(axTicks(2), format="d", big.mark=','))
+```
+
+```{r, echo=FALSE}
+cat_sqft_living <- cut(kc_house_data$sqft_living, breaks = c(290,2940,5590,8240,10890,13540), labels = c("290-2,940", "2,941-5,590", "5,591-8,240", "8,241-10,890", "10,891-13,540"))
+
+boxplot(kc_house_data$price~cat_sqft_living, pch = 20, cex = .5, yaxt="n", ylab = "Housing Price ($)", xlab = "Square Feet of Living Space", main = "Housing Price vs. Living Space", col = "orange", cex.axis = .75)
+axis(side=2, at=axTicks(2), 
+     labels=formatC(axTicks(2), format="d", big.mark=','))
+
+```
+
+```{r, echo=FALSE}
+summary(kc_house_data$sqft_lot)
+
+```
+
+```{r, echo=FALSE}
+library(grDevices)
+library(scales)
+
+hist(kc_house_data$sqft_lot, col = "green", cex.axis = .75, xlab = "Land Area (sqft.)", main = "Histogram of Land Area")
+
+hist(kc_house_data$sqft_lot[kc_house_data$sqft_lot<=25000], xaxt="n", cex.axis = .75, xlab = "Land Area (sqft.)", main = "Histogram of Land Area, up to 25,000 sqft.", col = heat.colors(13))
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+
+plot(kc_house_data$sqft_lot,kc_house_data$price, cex.axis = .75, pch = 20, cex = .1, xlab = "Land Area (sqft.)", ylab = "Housing Price ($)", xaxt="n", yaxt="n", main = "Housing Price vs. Land Area")
+abline(lm(kc_house_data$price~kc_house_data$sqft_lot, data = kc_house_data), col = "orange")
+legend(x='topright', legend=paste('Correlation =',round(cor(kc_house_data$sqft_lot, kc_house_data$price),5)))
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+axis(side=2, at=axTicks(2), 
+     labels=formatC(axTicks(2), format="d", big.mark=','))
+
+```
+
+```{r, echo=FALSE}
+
+cat_sqft_lot <- cut(kc_house_data$sqft_lot, breaks = c(520,330688,660856,991023,1321191, 1651359), labels = c("520-330K", "330K-660K", "660K-991K", "991K-1.3M", "1.3M-1.65M"))
+
+boxplot(kc_house_data$price~cat_sqft_lot, pch = 20, cex = .5, yaxt="n", ylab = "Housing Price ($)", xlab = "Land Area (sqft.)", main = "Housing Price vs. Land Area", col = rainbow(5), cex.axis = .70)
+axis(side=2, at=axTicks(2), 
+     labels=formatC(axTicks(2), format="d", big.mark=',', ))
+
+```
+
+
+```{r, include=FALSE}
+
+outlierKD <- function(dt, var) {
+  var_name <- eval(substitute(var),eval(dt))
+  tot <- sum(!is.na(var_name))
+  na1 <- sum(is.na(var_name))
+  m1 <- mean(var_name, na.rm = T)
+  par(mfrow=c(2, 2), oma=c(0,0,3,0))
+  boxplot(var_name, main="With outliers")
+  hist(var_name, main="With outliers", xlab=NA, ylab=NA)
+  outlier <- boxplot.stats(var_name)$out
+  mo <- mean(outlier)
+  var_name <- ifelse(var_name %in% outlier, NA, var_name)
+  boxplot(var_name, main="Without outliers")
+  hist(var_name, main="Without outliers", xlab=NA, ylab=NA)
+  title("Outlier Check", outer=TRUE)
+  na2 <- sum(is.na(var_name))
+  message("Outliers identified: ", na2 - na1, " from ", tot, " observations")
+  message("Proportion (%) of outliers: ", (na2 - na1) / tot*100)
+  message("Mean of the outliers: ", mo)
+  m2 <- mean(var_name, na.rm = T)
+  message("Mean without removing outliers: ", m1)
+  message("Mean if we remove outliers: ", m2)
+  response <- readline(prompt="Do you want to remove outliers and to replace with NA? [yes/no]: ")
+  if(response == "y" | response == "yes"){
+    dt[as.character(substitute(var))] <- invisible(var_name)
+    assign(as.character(as.list(match.call())$dt), dt, envir = .GlobalEnv)
+    message("Outliers successfully removed", "\n")
+    return(invisible(dt))
+  } else{
+    message("Nothing changed", "\n")
+    return(invisible(var_name))
+  }
+}
+
+source("https://goo.gl/4mthoF")
+par(mar=c(1,1,1,1))
+
+price_minus_outliers <- outlierKD(kc_house_data, kc_house_data$price)
+
+
+```
+
+
+```{r, echo=FALSE}
+
+boxplot(price_minus_outliers~cat_sqft_lot, pch = 20, cex = .5, yaxt="n", ylab = "Housing Price ($)", xlab = "Land Area (sqft.)", main = "Housing Price vs. Land Area (Outliers Removed)", col = rainbow(5), cex.axis = .70)
+axis(side=2, at=axTicks(2), 
+     labels=formatC(axTicks(2), format="d", big.mark=',', ))
+
+```
+
+```{r, echo=FALSE}
+
+hist(kc_house_data$condition, col = "green", cex.axis = .75, xlab = "Condition of the Apartment", main = "Histogram of Apartment Condition")
+
+boxplot(kc_house_data$price~kc_house_data$condition, cex.axis = .75, pch = 20, cex = .1, xlab = "Apartment Condition", ylab = "Housing Price ($)", xaxt="n", yaxt="n", main = "Housing Price vs. Apartment Condition", col = rainbow(5))
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+axis(side=2, at=axTicks(2), 
+     labels=formatC(axTicks(2), format="d", big.mark=','))
+
+boxplot(price_minus_outliers~kc_house_data$condition, cex.axis = .75, pch = 20, cex = .1, xlab = "Apartment Condition", ylab = "Housing Price ($)", xaxt="n", yaxt="n", main = "Housing Price vs. Apartment Condition (Outliers Removed)", col = rainbow(5))
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+axis(side=2, at=axTicks(2), 
+     labels=formatC(axTicks(2), format="d", big.mark=','))
+
+
+```
+
+```{r, echo=FALSE}
+
+cat_bedroom <- cut(kc_house_data$bedrooms, breaks = c(0,3,6,9,33), labels = c("0-2", "3-5", "6-8", "9-33"))
+
+boxplot(price_minus_outliers~cat_bedroom, cex.axis = .75, yaxt="n", pch = 20, cex = .1, xlab = "# Bedrooms", ylab = "Housing Price ($)", main = "Housing Price vs. # Bedrooms (Outliers Removed)", col = rainbow(5))
+axis(side=2, at=axTicks(2), 
+     labels=formatC(axTicks(2), format="d", big.mark=','))
+
+
+
+```
+
+```{r, echo=FALSE}
+
+hist(kc_house_data$yr_built, col = heat.colors(12), cex.axis = .75, xlab = "Year Home Built", main = "Histogram of Year Built")
+
+cat_yr_built <- cut(kc_house_data$yr_built, breaks = c(1900,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
+
+boxplot(price_minus_outliers~cat_yr_built, cex.axis = .75, yaxt="n", pch = 20, cex = .1, xlab = "Year Built", ylab = "Housing Price ($)", main = "Housing Price vs. Year Built (Outliers Removed)", col = rainbow(5))
+axis(side=2, at=axTicks(2), 
+     labels=formatC(axTicks(2), format="d", big.mark=','))
+
+```
+
+

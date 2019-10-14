@@ -1,8 +1,12 @@
 ---
-title: "Housing Price EDA (20,000+ entries)"
-author: "Daniel Frey"
+title: "Housing Market Seattle Area"
+author: "Anti-code Project"
 date: "10/5/2019"
-output: html_document
+output:  
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
 ---
 
 ```{r setup, include=FALSE}
@@ -10,11 +14,11 @@ knitr::opts_chunk$set(echo = FALSE)
 options(scipen = 999)
 ```
 
-```{r, echo=FALSE}
+```{r, include=FALSE}
 loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.packages(x,dep=T,repos="http://cran.us.r-project.org"); if(!require(x,character.only=T)) stop("Package not found") } }
 ```
 
-```{r base_lib}
+```{r base_lib, include=FALSE}
 loadPkg("dplyr")
 loadPkg("tidyr")
 loadPkg("tidyverse")
@@ -39,7 +43,7 @@ str(kc_house_data)
 colnames(kc_house_data)
 ```
 
-```{r clean}
+```{r clean, include=FALSE}
 kc_house_data <- subset(kc_house_data, select = -c(9, 10))
 
 kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms != 0 | kc_house_data$bathrooms != 0) 
@@ -278,6 +282,16 @@ summary(cond.anova)
 TKcond <- TukeyHSD(cond.anova)
 TKcond
 ```
+
+```{r anova grade}
+
+grade.anova <- aov(kc_house_data$price~kc_house_data$grade)
+summary(grade.anova)
+
+TKcond <- TukeyHSD(grade.anova)
+TKcond
+```
+
 
 ```{r anova year}
 

@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 options(scipen = 999)
 ```
 
@@ -34,7 +34,7 @@ loadPkg('geojsonio')
 ## Source Data
 
 ```{r, echo=FALSE}
-kc_house_data <- read_csv("kc_house_data.csv")
+kc_house_data <- read.csv("kc_house_data.csv")
 str(kc_house_data)
 colnames(kc_house_data)
 ```
@@ -132,7 +132,7 @@ summary(kc_house_data$sqft_lot)
 
 ```{r plot lot, echo=FALSE}
 
-hist(kc_house_data$sqft_lot, col = "green", cex.axis = .75, xlab = "Land Area (sqft.)", main = "Histogram of Land Area")
+hist(kc_house_data$sqft_lot, col = "yellow", cex.axis = .75, xlab = "Land Area (sqft.)", main = "Histogram of Land Area")
 
 hist(kc_house_data$sqft_lot[kc_house_data$sqft_lot<=25000], xaxt="n", cex.axis = .75, xlab = "Land Area (sqft.)", main = "Histogram of Land Area, up to 25,000 sqft.", col = heat.colors(13))
 axis(side=1, at=axTicks(1), 
@@ -195,6 +195,7 @@ outlierKD <- function(dt, var) {
 }
 
 price_minus_outliers <- outlierKD(kc_house_data, price)
+str(price_minus_outliers)
 
 
 ```
@@ -202,7 +203,10 @@ price_minus_outliers <- outlierKD(kc_house_data, price)
 
 ```{r boxplot lot no outliers, echo=FALSE}
 
-ggplot(price_minus_outliers, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area (Outliers Removed)") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+sqft.lot_nooutliers <- cut(price_minus_outliers$sqft_lot, breaks = c(519,330688,660856,991023,1321191, 1651359), labels = c("520-330K", "330K-660K", "660K-991K", "991K-1.3M", "1.3M-1.65M"))
+
+
+ggplot(price_minus_outliers, aes(x=sqft.lot_nooutliers, y=price, fill=sqft.lot_nooutliers)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area (Outliers Removed)") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
 
 ```
 
@@ -212,7 +216,7 @@ ggplot(price_minus_outliers, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_box
 ggplot(kc_house_data, aes(x=condition, y=price, fill=condition)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Condition") + ylab("Housing Price ($)") + xlab("Apartment Condition") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
 
 
-ggplot(price_minus_outliers, aes(x=condition, y=price, fill=condition)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Condition (Outliers Removed)") + ylab("Housing Price ($)") + xlab("Apartment Condition") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+ggplot(kc_house_data, aes(x=condition, y=price_minus_outliers$price, fill=condition)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Condition (Outliers Removed)") + ylab("Housing Price ($)") + xlab("Apartment Condition") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
 
 ```
 
@@ -229,7 +233,7 @@ ggplot(price_minus_outliers, aes(x=grade, y=price, fill=grade)) + geom_boxplot()
 ## Comparison of price and # bedrooms
 ```{r, echo=FALSE}
 
-number.bedrooms <- cut(kc_house_data$bedrooms, breaks = c(-1,3,6,9,33), labels = c("0-2", "3-5", "6-8", "9-33"))
+number.bedrooms <- cut(price_minus_outliers$bedrooms, breaks = c(-1,3,6,9,33), labels = c("0-2", "3-5", "6-8", "9-33"))
 
 ggplot(price_minus_outliers, aes(x=number.bedrooms, y=price, fill=number.bedrooms)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. # Bedrooms (Outliers Removed)") + ylab("Housing Price ($)") + xlab("# Bedrooms") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
 
@@ -240,7 +244,7 @@ ggplot(price_minus_outliers, aes(x=number.bedrooms, y=price, fill=number.bedroom
 
 hist(kc_house_data$yr_built, col = heat.colors(12), cex.axis = .75, xlab = "Year Home Built", main = "Histogram of Year Built")
 
-year.built <- cut(kc_house_data$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
+year.built <- cut(price_minus_outliers$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
 ggplot(price_minus_outliers, aes(x=year.built, y=price, fill=year.built)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Year Built (Outliers Removed)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
 

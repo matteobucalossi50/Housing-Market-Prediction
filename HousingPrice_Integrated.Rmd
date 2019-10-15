@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = FALSE)
 options(scipen = 999)
 ```
 
-```{r, include=FALSE}
+```{r basicfunct, include=FALSE}
 loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.packages(x,dep=T,repos="http://cran.us.r-project.org"); if(!require(x,character.only=T)) stop("Package not found") } }
 ```
 
@@ -52,7 +52,7 @@ kc_house_data <- subset(kc_house_data, kc_house_data$bathrooms != 0)
 
 kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms < 30)
 
-drop_na(kc_house_data)
+kc_house_data <-  drop_na(kc_house_data)
 
 kc_house_data$condition <- as.factor(kc_house_data$condition)
 
@@ -64,7 +64,7 @@ kc_house_data$grade <- as.factor(kc_house_data$grade)
 ```{r, echo=FALSE}
 summary(kc_house_data$price)
 
-print(mode(kc_house_data$price))
+print(mean(kc_house_data$price))
 
 print(sd(kc_house_data$price))
 
@@ -114,20 +114,27 @@ qqnorm(kc_house_data$price, pch = 20, cex = .5, main = "Housing Prices: Normal Q
 print(top_n(kc_house_data, 5, price)) %>% arrange(desc(price))
 ```
 
-```{r top price, echo=FALSE}
+```{r top sqftliv, echo=FALSE}
 print(top_n(kc_house_data, 5, sqft_living)) %>% arrange(desc(sqft_living))
 ```
 
-```{r top price, echo=FALSE}
+```{r top sqftlot, echo=FALSE}
 print(top_n(kc_house_data, 5, sqft_lot))  %>% arrange(desc(sqft_lot))
 ```
 
-```{r top price, echo=FALSE}
-print(top_n(kc_house_data, -5, yr_built))  %>% arrange(desc(yr_built))
+
+```{r top bedrooms, echo=FALSE}
+print(top_n(kc_house_data, 4, bedrooms))  %>% arrange(desc(bedrooms))
 ```
 
-```{r top price, echo=FALSE}
-print(top_n(kc_house_data, 4, bedrooms))  %>% arrange(desc(bedrooms))
+```{r rop avg cond, echo=F}
+print(aggregate(price~condition,data=kc_house_data,FUN=mean))
+
+```
+
+```{r rop avg grade, echo=F}
+print(aggregate(price~grade,data=kc_house_data,FUN=mean))
+
 ```
 
 
@@ -237,7 +244,8 @@ ggplot(kc_house_data, aes(x=year.built, y=price.ln, fill=year.built)) + geom_box
 
 ```
 
-# Anova tests
+# Hypothesis Testing
+## Anova tests
 
 ```{r anova sqfliv}
 
@@ -257,6 +265,16 @@ TKcond <- TukeyHSD(land.anova)
 TKcond
 ```
 
+```{r anova year}
+
+year.anova <- aov(kc_house_data$price~year.built)
+summary(year.anova)
+
+TKcond <- TukeyHSD(year.anova)
+TKcond
+```
+
+## Chi-square tests
 ```{r chisq condition}
 
 cond.tbl <- table(kc_house_data$price, kc_house_data$condition)
@@ -272,11 +290,4 @@ chisq.grade
 ```
 
 
-```{r anova year}
 
-year.anova <- aov(kc_house_data$price~year.built)
-summary(year.anova)
-
-TKcond <- TukeyHSD(year.anova)
-TKcond
-```

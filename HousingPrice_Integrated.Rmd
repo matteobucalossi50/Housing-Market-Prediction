@@ -37,6 +37,8 @@ loadPkg('geojsonio')
 # Description Data
 ## Source Data
 
+https://www.kaggle.com/harlfoxem/housesalesprediction/data#kc_house_data.csv
+
 ```{r, echo=FALSE}
 kc_house_data <- read.csv("kc_house_data.csv")
 str(kc_house_data)
@@ -299,6 +301,25 @@ TKcond
 ```
 
 
+```{r anova condition}
+
+cond.anova <- aov(kc_house_data$price~kc_house_data$condition)
+summary(cond.anova)
+
+TKcond <- TukeyHSD(cond.anova)
+TKcond
+```
+
+```{r anova grade}
+
+grade.anova <- aov(kc_house_data$price~kc_house_data$grade)
+summary(grade.anova)
+
+TKcond <- TukeyHSD(grade.anova)
+TKcond
+```
+
+
 ```{r anova bedrooms}
 
 beds.anova <- aov(kc_house_data$price~number.bedrooms)
@@ -312,17 +333,18 @@ TKcond
 ## Chi-square tests
 ```{r chisq condition}
 
-cond.tbl <- table(kc_house_data$price, kc_house_data$condition)
+cond.tbl <- table(kc_house_data$condition, kc_house_data$grade)
 chisq.cond <- chisq.test(cond.tbl)
 chisq.cond
+
 ```
 
-```{r anova grade}
+```{r chisq year}
 
-grade.tbl <- table(kc_house_data$price, kc_house_data$grade)
-chisq.grade <- chisq.test(grade.tbl)
-chisq.grade
+grade.tbl <- table(kc_house_data$grade, year.built)
+chisq.cond <- chisq.test(grade.tbl)
+chisq.cond
+
 ```
-
 
 

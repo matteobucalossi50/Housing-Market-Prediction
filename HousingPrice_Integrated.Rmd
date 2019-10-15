@@ -37,8 +37,6 @@ loadPkg('geojsonio')
 # Description Data
 ## Source Data
 
-https://www.kaggle.com/harlfoxem/housesalesprediction/data#kc_house_data.csv
-
 ```{r, echo=FALSE}
 kc_house_data <- read.csv("kc_house_data.csv")
 str(kc_house_data)
@@ -96,6 +94,9 @@ house.map
 ```
 
 ## Distribution of Price
+
+The following are housing price distributions (histograms). The first includes the frequency of all price occurences, and the other only shows those less than or equal to $2M (the vast majority of data points are below this price point). Also included is a Q-Q plot showing the distribution of the data.
+
 ```{r price hist, echo=FALSE}
 
 hist(kc_house_data$price, xaxt="n", ylim = c(0,14000), col = "green", main = "Housing Price Histogram", xlab = "Housing Price ($)", cex.axis = .75)
@@ -110,6 +111,8 @@ axis(side=1, at=axTicks(1),
 qqnorm(kc_house_data$price, pch = 20, cex = .5, main = "Housing Prices: Normal Q-Q Plot", ylab = "Housing Price ($)", cex.axis = .75)
 
 ```
+
+##The following is a summary of price per square foot, per annum.
 
 ```{r price per year}
 
@@ -130,6 +133,9 @@ price per sqft:
 
   
 ## High observations
+
+The following are a summary of the first few rows for bedrooms, land area, and living space (price showed is average for that variable level (e.g. $262,000 is the average price for grade 3 construction).
+
 ```{r top price, echo=FALSE}
 print(top_n(kc_house_data, 5, price)) %>% arrange(desc(price))
 ```
@@ -159,6 +165,9 @@ print(aggregate(price~grade,data=kc_house_data,FUN=mean))
 
 
 ## Comparison of price and living sqft
+
+Below is a scatterplot of price vs. living space, along with their correlation.
+
 ```{r plot sqft living, echo=FALSE}
 
 plot(kc_house_data$sqft_living, kc_house_data$price, xaxt="n", yaxt="n", pch = 20, cex = .1, xlab = "Square Feet of Living Space", ylab = "Housing Price ($)", cex.axis = .75, main = "Housing Price vs. Living Space")
@@ -169,6 +178,10 @@ axis(side=1, at=axTicks(1),
 axis(side=2, at=axTicks(2), 
      labels=formatC(axTicks(2), format="d", big.mark=','))
 ```
+
+## Boxplot & Scatterplot for Living Space
+
+Below are a boxplot and scatterplot for living space vs. price.
 
 ```{r boxplot sqft living, echo=FALSE}
 
@@ -184,6 +197,9 @@ ggplot(kc_house_data, aes(x=sqft.living, y=price, fill=sqft.living)) + geom_boxp
 
 
 ## Comparison price and lot sqft
+
+The following includes histograms of lot square feet (including one equal to or below 25,000 sqft., where the vast majority of data points lie). Also included is a scatterplot showing the correlation between price and land area.
+
 ```{r lot summary, echo=FALSE}
 summary(kc_house_data$sqft_lot)
 
@@ -207,6 +223,10 @@ axis(side=2, at=axTicks(2),
 
 ```
 
+## Comparison of Land Area and Housing Price
+
+Included below is a boxplot of land area vs. housing price.
+
 ```{r boxplot lot, echo=FALSE}
 
 max(kc_house_data$sqft_lot)
@@ -218,6 +238,9 @@ ggplot(kc_house_data, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() 
 
 
 ```
+## Comparison of Price vs. Land Area
+
+Included below is a boxplot of price vs. land area (log version).
 
 ```{r log price, include=FALSE}
 price.ln = log(kc_house_data$price)
@@ -231,6 +254,9 @@ ggplot(kc_house_data, aes(x=sqft.lot, y=price.ln, fill=sqft.lot)) + geom_boxplot
 ```
 
 ## Comparison of price and condition
+
+Boxplots of price vs. apartment condition (regular and log versions).
+
 ```{r, echo=FALSE}
 
 ggplot(kc_house_data, aes(x=condition, y=price, fill=condition)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Condition") + ylab("Housing Price ($)") + xlab("Apartment Condition") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
@@ -241,6 +267,9 @@ ggplot(kc_house_data, aes(x=condition, y=price.ln, fill=condition)) + geom_boxpl
 ```
 
 ## Comparison of price and grade (construction and design)
+
+Boxplots of price and grade (regular and log versions).
+
 ```{r, echo=FALSE}
 
 ggplot(kc_house_data, aes(x=grade, y=price, fill=grade)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Grade") + ylab("Housing Price ($)") + xlab("Apartment Grade") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
@@ -251,6 +280,9 @@ ggplot(kc_house_data, aes(x=grade, y=price.ln, fill=grade)) + geom_boxplot() + s
 
 
 ## Comparison of price and # bedrooms
+
+Boxplot of housing price vs. number of bedrooms (log version).
+
 ```{r, echo=FALSE}
 
 number.bedrooms <- cut(kc_house_data$bedrooms, breaks = c(0,3,6,9,11), labels = c("1-2", "3-5", "6-8", "9-11"))
@@ -260,6 +292,9 @@ ggplot(kc_house_data, aes(x=number.bedrooms, y=price.ln, fill=number.bedrooms)) 
 ```
 
 ## Comparison of price and year built
+
+Histogram and boxplot of price vs. year built (log version).
+
 ```{r, echo=FALSE}
 
 hist(kc_house_data$yr_built, col = heat.colors(12), cex.axis = .75, xlab = "Year Home Built", main = "Histogram of Year Built")
@@ -273,6 +308,8 @@ ggplot(kc_house_data, aes(x=year.built, y=price.ln, fill=year.built)) + geom_box
 # Hypothesis Testing
 ## Anova tests
 
+ANOVA run on price and living space; Tukey post-hoc test also conducted.
+
 ```{r anova sqfliv}
 
 living.anova <- aov(kc_house_data$price~sqft.living)
@@ -281,6 +318,8 @@ summary(living.anova)
 TKcond <- TukeyHSD(living.anova)
 TKcond
 ```
+
+ANOVA run on price and land area; Tukey post-hoc test also conducted.
 
 ```{r anova land}
 
@@ -291,6 +330,8 @@ TKcond <- TukeyHSD(land.anova)
 TKcond
 ```
 
+ANOVA run on price and year built; Tukey post-hoc test also conducted.
+
 ```{r anova year}
 
 year.anova <- aov(kc_house_data$price~year.built)
@@ -300,25 +341,7 @@ TKcond <- TukeyHSD(year.anova)
 TKcond
 ```
 
-
-```{r anova condition}
-
-cond.anova <- aov(kc_house_data$price~kc_house_data$condition)
-summary(cond.anova)
-
-TKcond <- TukeyHSD(cond.anova)
-TKcond
-```
-
-```{r anova grade}
-
-grade.anova <- aov(kc_house_data$price~kc_house_data$grade)
-summary(grade.anova)
-
-TKcond <- TukeyHSD(grade.anova)
-TKcond
-```
-
+ANOVA run on price and number of bedrooms; Tukey post-hoc test also conducted.
 
 ```{r anova bedrooms}
 
@@ -331,20 +354,24 @@ TKcond
 
 
 ## Chi-square tests
+
+Chi-square test run on price and housing condition.
+
 ```{r chisq condition}
 
-cond.tbl <- table(kc_house_data$condition, kc_house_data$grade)
+cond.tbl <- table(kc_house_data$price, kc_house_data$condition)
 chisq.cond <- chisq.test(cond.tbl)
 chisq.cond
-
 ```
 
-```{r chisq year}
+Chi-square test run on price and grade.
 
-grade.tbl <- table(kc_house_data$grade, year.built)
-chisq.cond <- chisq.test(grade.tbl)
-chisq.cond
+```{r anova grade}
 
+grade.tbl <- table(kc_house_data$price, kc_house_data$grade)
+chisq.grade <- chisq.test(grade.tbl)
+chisq.grade
 ```
+
 
 

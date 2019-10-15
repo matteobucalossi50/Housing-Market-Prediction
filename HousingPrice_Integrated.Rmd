@@ -32,10 +32,19 @@ loadPkg('scales')
 loadPkg('RCurl')
 loadPkg('sp')
 loadPkg('geojsonio')
+loadPkg('lmtest')
+loadPkg("faraway")
+loadPkg('car')
+loadPkg("corrplot")
+loadPkg("modelr")
 ```
 
 # Description Data
 ## Source Data
+
+https://www.kaggle.com/harlfoxem/housesalesprediction/data
+
+https://github.com/matteobucalossi50/DATS6101_Project
 
 ```{r, echo=FALSE}
 kc_house_data <- read.csv("kc_house_data.csv")
@@ -305,23 +314,49 @@ ggplot(kc_house_data, aes(x=year.built, y=price.ln, fill=year.built)) + geom_box
 
 ```
 
+
 # Hypothesis Testing
-## Anova tests
 
-ANOVA run on price and living space; Tukey post-hoc test also conducted.
+## Chi-square tests
+```{r chisq condition}
 
-```{r anova sqfliv}
+cond.tbl <- table(kc_house_data$condition, kc_house_data$grade)
+chisq.cond <- chisq.test(cond.tbl)
+chisq.cond
 
-living.anova <- aov(kc_house_data$price~sqft.living)
-summary(living.anova)
-
-TKcond <- TukeyHSD(living.anova)
-TKcond
 ```
 
-ANOVA run on price and land area; Tukey post-hoc test also conducted.
+
+```{r chisq year}
+
+grade.tbl <- table(kc_house_data$grade, year.built)
+chisq.cond <- chisq.test(grade.tbl)
+chisq.cond
+
+```
+
+
+```{r chisq bedr}
+
+bedroom_price <- kc_house_data[c('City', 'price', 'bedrooms', 'bathrooms')]
+bedroom_price$price = cut(bedroom_price$price, c(0, 250000, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000))
+bedroom_price$price <- as.factor(bedroom_price$price)
+bedroom_price$bedrooms <- as.factor(bedroom_price$bedrooms)
+bedroom_price$bathrooms <- as.factor(bedroom_price$bathrooms)
+bed_p <- table(bedroom_price$bedrooms, bedroom_price$price)
+x2test1 = chisq.test(bed_p)
+x2test1
+bath_p <- table(bedroom_price$bathrooms, bedroom_price$price)
+x2test2 = chisq.test(bath_p)
+x2test2
+
+```
+
+## Anova tests
 
 ```{r anova land}
+
+bptest(kc_house_data$price~sqft.lot)
 
 land.anova <- aov(kc_house_data$price~sqft.lot)
 summary(land.anova)
@@ -330,48 +365,85 @@ TKcond <- TukeyHSD(land.anova)
 TKcond
 ```
 
-ANOVA run on price and year built; Tukey post-hoc test also conducted.
+```{r anova condition}
+bptest(price~condition, data = kc_house_data)
+
+cond.anova <- aov(kc_house_data$price~kc_house_data$condition)
+summary(cond.anova)
+
+TKcond <- TukeyHSD(cond.anova)
+TKcond
+```
+
+```{r anova living}
+bptest(kc_house_data$price~sqft.living)
+
+```
 
 ```{r anova year}
+bptest(kc_house_data$price~year.built)
 
-year.anova <- aov(kc_house_data$price~year.built)
-summary(year.anova)
-
-TKcond <- TukeyHSD(year.anova)
-TKcond
 ```
 
-ANOVA run on price and number of bedrooms; Tukey post-hoc test also conducted.
-
-```{r anova bedrooms}
-
-beds.anova <- aov(kc_house_data$price~number.bedrooms)
-summary(beds.anova)
-
-TKcond <- TukeyHSD(beds.anova)
-TKcond
-```
-
-
-## Chi-square tests
-
-Chi-square test run on price and housing condition.
-
-```{r chisq condition}
-
-cond.tbl <- table(kc_house_data$price, kc_house_data$condition)
-chisq.cond <- chisq.test(cond.tbl)
-chisq.cond
-```
-
-Chi-square test run on price and grade.
 
 ```{r anova grade}
+bptest(price~grade, data = kc_house_data)
 
-grade.tbl <- table(kc_house_data$price, kc_house_data$grade)
-chisq.grade <- chisq.test(grade.tbl)
-chisq.grade
 ```
 
+
+```{r anova bedrooms}
+bptest(kc_house_data$price~number.bedrooms)
+
+```
+
+# LSRL
+
+
+##Model building
+
+```{r}
+h2 <- subset(kc_house_data,select = c(price,bedrooms,bathrooms,sqft_living,sqft_lot,floors,sqft_above,sqft_basement,yr_built ))
+hcor = cor(h2)
+corrplot(hcor, method = "number", type="upper")
+```
+##yr_built and sqft_lot seem unrelated to price.
+```{r}
+model1 <- lm(price~.-sqft_lot-yr_built,data=h2)
+summary(model1)
+```
+##The coefficient of sqft_basement is NA indicates it has problem with other variables so I drop this one.
+
+```{r}
+model2 <- lm(price~.-sqft_lot-yr_built-sqft_basement-bathrooms,data=h2)
+summary(model2)
+vif(model2)
+```
+##Everything looks better, then I added the two factor variables into the dataset and se their effects.
+```{r}
+h3 <- subset(kc_house_data,select = c(price,bedrooms,sqft_living,sqft_above,floors,grade,condition) )
+summary(h3)
+```
+
+```{r}
+model3 <- lm(price~.,data=h3)
+summary(model3)
+```
+```{r}
+model11 <- lm(price~.-condition,data=h3)
+summary(model11)
+```
+
+##All levels of condition are unsignificant, so we drop the condition varibale. And high grade has significant effect on price
+
+```{r}
+h4<-subset(kc_house_data,select=c(price,bedrooms,sqft_living,sqft_above,floors,grade))
+model4<-lm(price~.+bedrooms:sqft_living+bedrooms:floors+bedrooms:sqft_above+sqft_living:floors+sqft_living:sqft_above+floors:sqft_above,data = h4)
+summary(model4)
+```
+```{r digit=9}
+model5<-lm(price~.+bedrooms:sqft_above+sqft_living:sqft_above,data = h4)
+summary(model5)
+```
 
 

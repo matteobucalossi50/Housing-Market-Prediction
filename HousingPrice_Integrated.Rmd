@@ -109,6 +109,24 @@ qqnorm(kc_house_data$price, pch = 20, cex = .5, main = "Housing Prices: Normal Q
 
 ```
 
+```{r price per year}
+
+date_price <- kc_house_data[c('date', 'price', 'sqft_living', 'sqft_lot')]
+date_price$date <- as.character(date_price$date)
+date_price$date <- substr(date_price$date, 1, nchar(date_price$date)-11)
+date_price <- date_price[order(date_price$date),]
+date_price$date <- as.factor(date_price$date)
+date_price %>%
+  group_by(date) %>%
+  summarise(price = sum(price), sqft_living=sum(sqft_living), sqft_lot=sum(sqft_lot), price_per_sqft = price/sqft_living)
+
+```
+
+price per sqft:  
+  2014 -> 36.06  
+  2015 -> 35.11  
+
+  
 ## High observations
 ```{r top price, echo=FALSE}
 print(top_n(kc_house_data, 5, price)) %>% arrange(desc(price))
@@ -152,6 +170,9 @@ axis(side=2, at=axTicks(2),
 
 ```{r boxplot sqft living, echo=FALSE}
 
+max(kc_house_data$sqft_living)
+min(kc_house_data$sqft_living)
+
 sqft.living <- cut(kc_house_data$sqft_living, breaks = c(289,2940,5590,8240,10890,13540), labels = c("290-2,940", "2,941-5,590", "5,591-8,240", "8,241-10,890", "10,891-13,540"))
 
 
@@ -185,6 +206,9 @@ axis(side=2, at=axTicks(2),
 ```
 
 ```{r boxplot lot, echo=FALSE}
+
+max(kc_house_data$sqft_lot)
+min(kc_house_data$sqft_lot)
 
 sqft.lot <- cut(kc_house_data$sqft_lot, breaks = c(519,330688,660856,991023,1321191, 1651359), labels = c("520-330K", "330K-660K", "660K-991K", "991K-1.3M", "1.3M-1.65M"))
 

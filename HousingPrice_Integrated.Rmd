@@ -34,7 +34,6 @@ loadPkg('sp')
 loadPkg('geojsonio')
 loadPkg('lmtest')
 loadPkg("faraway")
-loadPkg('car')
 loadPkg("corrplot")
 loadPkg("modelr")
 ```
@@ -47,7 +46,7 @@ https://www.kaggle.com/harlfoxem/housesalesprediction/data
 https://github.com/matteobucalossi50/DATS6101_Project
 
 ```{r, echo=FALSE}
-kc_house_data <- read.csv("kc_house_data.csv")
+kc_house_data <- read.csv("~/Downloads/kc_house_data.csv")
 str(kc_house_data)
 colnames(kc_house_data)
 ```

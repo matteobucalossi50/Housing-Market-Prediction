@@ -338,19 +338,20 @@ chisq.cond
 
 ```{r chisq bedr}
 
-bedroom_price <- kc_house_data[c('City', 'price', 'bedrooms', 'bathrooms')]
-bedroom_price$price = cut(bedroom_price$price, c(0, 250000, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000))
-bedroom_price$price <- as.factor(bedroom_price$price)
-bedroom_price$bedrooms <- as.factor(bedroom_price$bedrooms)
-bedroom_price$bathrooms <- as.factor(bedroom_price$bathrooms)
-bed_p <- table(bedroom_price$bedrooms, bedroom_price$price)
+price.intrv = cut(kc_house_data$price, c(0, 250000, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000))
+
+number.bathrooms <- cut(kc_house_data$bathrooms, breaks = c(0,2,4,6,8), labels = c("0.5-1.5", "2-3.5", "4-5.5", "6-8"))
+
+bed_p <- table(number.bedrooms, price.intrv)
 x2test1 = chisq.test(bed_p)
 x2test1
-bath_p <- table(bedroom_price$bathrooms, bedroom_price$price)
+
+bath_p <- table(number.bathrooms, price.intrv)
 x2test2 = chisq.test(bath_p)
 x2test2
 
 ```
+
 
 ## Anova tests
 

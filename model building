@@ -83,7 +83,7 @@ summary(model5)
 ##Price = 142000 
 +bedrooms*(-31710+10.72*sqft_above)
 +sqft_living*(170+2.943*sqft_above)
-+sqft_above*(28.6+10.72*bedrooms+2.943*sqft_living)
++sqft_above
 +floors*14570
 +grade()*
 

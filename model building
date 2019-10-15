@@ -79,3 +79,11 @@ summary(model4)
 model5<-lm(price~.+bedrooms:sqft_above+sqft_living:sqft_above,data = h4)
 summary(model5)
 ```
+
+##Price = 142000 
++bedrooms*(-31710+10.72*sqft_above)
++sqft_living*(170+2.943*sqft_above)
++sqft_above*(28.6+10.72*bedrooms+2.943*sqft_living)
++floors*14570
++grade()*
+

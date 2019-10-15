@@ -274,6 +274,17 @@ TKcond <- TukeyHSD(year.anova)
 TKcond
 ```
 
+
+```{r anova bedrooms}
+
+beds.anova <- aov(kc_house_data$price~number.bedrooms)
+summary(beds.anova)
+
+TKcond <- TukeyHSD(beds.anova)
+TKcond
+```
+
+
 ## Chi-square tests
 ```{r chisq condition}
 

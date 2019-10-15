@@ -1,0 +1,117 @@
+---
+title: "House_Price"
+author: "Jialei Chen"
+date: "2019/10/10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+```
+
+```{r, include=FALSE}
+loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.packages(x,dep=T,repos="http://cran.us.r-project.org"); if(!require(x,character.only=T)) stop("Package not found") } }
+```
+
+```{r base_lib, include=FALSE}
+loadPkg("dplyr")
+loadPkg("tidyr")
+loadPkg('rjson')
+loadPkg('jsonlite')
+loadPkg("tidyverse")
+loadPkg("ggplot2")
+loadPkg('ggmap')
+loadPkg('leaflet')
+```
+
+### Import and clean the data
+```{r import_dataset}
+house <- data.frame(read.csv('kc_house_data.csv', header=TRUE))
+```
+
+```{r year on price}
+colnames(house)
+date_price <- house[c('date', 'price', 'sqft_living', 'sqft_lot')]
+date_price$date <- as.character(date_price$date)
+date_price$date <- substr(date_price$date, 1, nchar(date_price$date)-11)
+date_price <- date_price[order(date_price$date),]
+date_price$date <- as.factor(date_price$date)
+date_price %>%
+  group_by(date) %>%
+  summarise(price = sum(price), sqft_living=sum(sqft_living), sqft_lot=sum(sqft_lot), price_per_sqft = price/sqft_living)
+```
+
+### Price
+The description of Price:
+```{r}
+summary(house$price)
+print(sd(house$price))
+print(var(house$price))
+```
+### Price on years
+price per sqft:  
+  2014 -> 36.06  
+  2015 -> 35.11  
+  
+```{r city and price}
+city_price <- house[c('City', 'price', 'sqft_living')]
+city_price <- aggregate(city_price[, c(2,3)], by=list(Category=city_price$City), FUN=sum)
+city_price <- city_price %>% mutate(price_per_sqft=format(price/sqft_living, digits=2))
+city_price$Category <- as.factor(city_price$Category)
+city_price$price_per_sqft <- as.factor(city_price$price_per_sqft)
+tablex <- table(city_price$Category, city_price$price_per_sqft)
+city_price <- city_price[order(city_price$price_per_sqft), ]
+cp = chisq.test(tablex)
+cp
+```
+P-value is 0.3922 which is greater than 0.3922. Thus, we failed to reject the null hypothesis. The price and city are independent with each other.
+
+### Number of bedrooms/bathrooms and price
+```{r number of bedrooms/bathroom and price}
+bedroom_price <- house[c('City', 'price', 'bedrooms', 'bathrooms')]
+bedroom_price$price = cut(bedroom_price$price, c(0, 250000, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000))
+bedroom_price$price <- as.factor(bedroom_price$price)
+bedroom_price$bedrooms <- as.factor(bedroom_price$bedrooms)
+bedroom_price$bathrooms <- as.factor(bedroom_price$bathrooms)
+bed_p <- table(bedroom_price$bedrooms, bedroom_price$price)
+x2test1 = chisq.test(bed_p)
+x2test1
+bath_p <- table(bedroom_price$bathrooms, bedroom_price$price)
+x2test2 = chisq.test(bath_p)
+x2test2
+```
+
+### ANOVA
+```{r living area and price}
+max(house$sqft_living)
+min(house$sqft_living)
+sqdt_living = cut(house$sqft_living, c(290, 2940, 5590, 8240, 10890 ,13540))
+str(sqdt_living)
+living_price.anova <- aov(house$price ~ sqdt_living)
+summary(living_price.anova)
+```
+
+
+```{r lot area and price}
+max(house$sqft_lot)
+min(house$sqft_lot)
+sqft_lot = cut(house$sqft_lot, c(520, 330687.8, 660855.6, 991023.4, 1321191.2 ,1651359))
+str(sqft_lot)
+lot_price.anova <- aov(house$price ~ sqft_lot)
+summary(lot_price.anova)
+```
+
+
+```{r condition and price}
+house$condition <- as.factor(house$condition)
+condition_price.anova <- aov(house$price ~ house$condition)
+summary(condition_price.anova)
+```
+
+
+```{r grade and price}
+house$grade <- as.factor(house$grade)
+grade_price.anova <- aov(house$price ~ house$grade)
+summary(grade_price.anova)
+```

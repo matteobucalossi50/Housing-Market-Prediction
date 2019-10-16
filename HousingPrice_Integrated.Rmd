@@ -63,6 +63,8 @@ kc_house_data <-  drop_na(kc_house_data)
 kc_house_data$condition <- as.factor(kc_house_data$condition)
 kc_house_data$grade <- as.factor(kc_house_data$grade)
 ```
+Explain more of grade, condition. Question with answer per section.
+Use year renovated for tests and comparison.
 
 ## Summary for Price
 ```{r, echo=FALSE}

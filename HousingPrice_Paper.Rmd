@@ -450,7 +450,8 @@ chisq.condy
 
 **subset for older houses with renovation and rerun both tests and see difference in time**
 
-
+like older house renovated cost normal? median house are still not renovated? how is the condition grade for older one? how is it for older renovated how is it for newer? how price changes in all these dynamics etc
+like they wanted us to go in depth of that cause it actually makes sense
 
 
 # Chapter 5: Multiple Linear Regression Model

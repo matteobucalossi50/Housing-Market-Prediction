@@ -42,6 +42,17 @@ loadPkg("modelr")
 
 *insert intro here: why this dataset, background research on topic and data, what this data and report about, table of contents description*
 
+Seattle boasts among the "hottest" housing markets in the United States; as of July 2018, Seattle "led the nation in home price gains" for 21 straight months, topped only by Portland in the 1990s – a trend driven by the city's tech sector and a  lack of supply compared with demand (https://bit.ly/2v5UMcn). Given the Seattle housing market's notoriety for high prices, we were interested in exploring which variables affect housing price in this market. With this goal in mind, we found a public dataset on Kaggle ("House Sales in King County, USA") offering 21,613 observations across 21 variables. Although it doesn't explore macro-level variables affecting housing price (such as the local job market, Amazon presence, etc.), it does focus on micro-level variables, such as renovations, number of bedrooms, square feet of living space, etc. that are common to virtually all housing markets in the United States. An analysis of Seattle's housing market could lay the groundwork for future comparative analysis with other housing markets.
+
+This report is organized as follows:
+
+1. Description of the Data (explanation of the dataset and its variables, 
+2. Geographic Coverage of Data
+3. House Prices vs. Size
+4. Factors Analysis
+5. Multiple Linear Regression Model
+6. Conclusion
+
 # Chapter 2: Description Data
 ## Source Data
 

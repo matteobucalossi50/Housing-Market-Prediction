@@ -1,0 +1,527 @@
+---
+title: "Housing Market - Seattle Area"
+author: "Anti-Code Group"
+date: "10/5/2019"
+output:  
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(scipen = 999)
+```
+
+```{r basicfunct, include=FALSE}
+loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.packages(x,dep=T,repos="http://cran.us.r-project.org"); if(!require(x,character.only=T)) stop("Package not found") } }
+```
+
+```{r base_lib, include=FALSE}
+loadPkg("dplyr")
+loadPkg("tidyr")
+loadPkg("tidyverse")
+loadPkg("ggplot2")
+loadPkg('ggmap')
+loadPkg('rjson')
+loadPkg('jsonlite')
+loadPkg('leaflet')
+loadPkg('grDevices')
+loadPkg('scales')
+loadPkg('RCurl')
+loadPkg('sp')
+loadPkg('geojsonio')
+loadPkg('lmtest')
+loadPkg("faraway")
+loadPkg("corrplot")
+loadPkg("modelr")
+```
+
+# Chapter 1: Introduction
+
+*insert intro here: why this dataset, background research on topic and data, what this data and report about, table of contents description*
+
+# Chapter 2: Description Data
+## Source Data
+
+https://www.kaggle.com/harlfoxem/housesalesprediction/data
+
+https://github.com/matteobucalossi50/DATS6101_Project
+
+*can delete links and explain dataset and variables and all that, as well as what done with cleaning coding (including reasoning for log price, whici will later be more clear with graphs)* 
+
+```{r, echo=FALSE}
+kc_house_data <- read.csv("kc_house_data.csv")
+str(kc_house_data)
+colnames(kc_house_data)
+```
+
+```{r clean, include=FALSE}
+kc_house_data <- subset(kc_house_data, select = -c(9, 10))
+
+kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms != 0)
+
+kc_house_data <- subset(kc_house_data, kc_house_data$bathrooms != 0)
+
+kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms < 30)
+
+kc_house_data <-  drop_na(kc_house_data)
+
+kc_house_data$condition <- as.factor(kc_house_data$condition)
+
+kc_house_data$grade <- as.factor(kc_house_data$grade)
+
+price.ln = log(kc_house_data$price)
+
+```
+
+```{r, include=FALSE}
+summary(kc_house_data$price)
+
+print(mean(kc_house_data$price))
+
+print(sd(kc_house_data$price))
+
+print(var(kc_house_data$price))
+
+```
+
+*use inline code to describe dataset statistics and values*
+
+## Geographic Coverage of Data
+Below is a visualization of the points in the dataset by price, plotted with the leaflet library.
+Note that the data have been divided by unequal bins to provide a better visualization of the distribution of housing price, so please read the legend carefully.
+ 
+```{r geo, echo=FALSE}
+price.bins <- c(0, 250000, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000, 8000000)
+qpal <-  colorBin(palette = 'GnBu', kc_house_data$price, bins= price.bins, n = 9)
+house.map <- leaflet(kc_house_data) %>% 
+  addProviderTiles("CartoDB.Positron") %>% 
+  addCircleMarkers(lng = ~long, lat = ~lat, 
+                   stroke = FALSE, 
+                   fillOpacity = 5, 
+                   color = ~qpal(price), 
+                   radius = 2,
+                   label = ~as.character(paste0('Price: $', price, ", ", 'condition: ', condition, ", ", 'year built: ', yr_built))) %>%
+  addLegend('bottomright', pal = qpal, values = ~price, opacity = 1, title = 'Price', labFormat = labelFormat(prefix = '$', between = ' - $'))
+
+house.map
+
+```
+
+Here instead is a visualization of the observations by property lot sqft. Again, data have been divided by unequal bins to provide a better visualization of the distribution of housing price, so please read the legend carefully.
+
+```{r geo, echo=FALSE}
+
+sqft.bins <- c(519,10000,200000,400000,660856, 1651359)
+
+qpal <-  colorBin(palette = 'YlOrBr', kc_house_data$sqft_lot, bins= sqft.bins, n = 5)
+house.map <- leaflet(kc_house_data) %>% 
+  addProviderTiles("CartoDB.DarkMatter") %>% 
+  addCircleMarkers(lng = ~long, lat = ~lat, 
+                   stroke = FALSE, 
+                   fillOpacity = 5, 
+                   color = ~qpal(sqft_lot), 
+                   radius = 2,
+                   label = ~as.character(paste0('Sqft_lot: $', sqft_lot, ", ", 'condition: ', condition, ", ", 'year built: ', yr_built, 'price: ', price))) %>%
+  addLegend('bottomright', pal = qpal, values = ~sqft_lot, opacity = 1, title = 'Sqft_lot', labFormat = labelFormat( between = ' - '))
+
+house.map
+
+```
+
+
+
+# Chapter 3: House prices and sizes
+## House Price
+
+*descibe how price is min max etc, then inline code for price per sqft and how expensive seattle is etc*
+
+```{r price hist, echo=FALSE}
+
+hist(kc_house_data$price, xaxt="n", ylim = c(0,14000), col = "green", main = "Housing Price Histogram", xlab = "Housing Price ($)", cex.axis = .75)
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+
+
+hist(kc_house_data$price[kc_house_data$price<=2000000], xaxt="n", ylim = c(0,5000), col = heat.colors(20), main = "Housing Price Histogram, $0-$2M Only", xlab = "Housing Price ($)", cex.axis = .75)
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+
+qqnorm(kc_house_data$price, pch = 20, cex = .5, main = "Housing Prices: Normal Q-Q Plot", ylab = "Housing Price ($)", cex.axis = .75)
+
+```
+
+```{r price per year, include=FALSE}
+
+date_price <- kc_house_data[c('date', 'price', 'sqft_living', 'sqft_lot')]
+date_price$date <- as.character(date_price$date)
+date_price$date <- substr(date_price$date, 1, nchar(date_price$date)-11)
+date_price <- date_price[order(date_price$date),]
+date_price$date <- as.factor(date_price$date)
+date_price %>%
+  group_by(date) %>%
+  summarise(price = sum(price), sqft_living=sum(sqft_living), sqft_lot=sum(sqft_lot), price_per_sqft = price/sqft_living)
+
+```
+
+price per sqft:  
+  2014 -> 36.06  
+  2015 -> 35.11  
+
+### how do the most expensive houses look like?
+
+```{r top price, echo=FALSE}
+print(top_n(kc_house_data, 5, price)) %>% arrange(desc(price))
+```
+
+### what is the average price for each condition level?
+```{r rop avg cond, echo=F}
+print(aggregate(price~condition,data=kc_house_data,FUN=mean))
+
+```
+
+### what is the average price for each grade level?
+```{r rop avg grade, echo=F}
+print(aggregate(price~grade,data=kc_house_data,FUN=mean))
+
+```
+
+## House Size
+
+
+*add histograms for bedroom variable and sqft living variable - comment on them*
+
+```{r lot hist, echo=FALSE}
+hist(kc_house_data$sqft_lot, col = "yellow", cex.axis = .75, xlab = "Land Area (sqft.)", main = "Histogram of Land Area")
+
+hist(kc_house_data$sqft_lot[kc_house_data$sqft_lot<=25000], xaxt="n", cex.axis = .75, xlab = "Land Area (sqft.)", main = "Histogram of Land Area, up to 25,000 sqft.", col = heat.colors(13))
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+```
+
+### How do the largest houses look like?
+*introduce the reasoning of this passage and thendescribe each output with reason under each of them*
+```{r top sqftliv, echo=FALSE}
+print(top_n(kc_house_data, 5, sqft_living)) %>% arrange(desc(sqft_living))
+```
+
+
+```{r top sqftlot, echo=FALSE}
+print(top_n(kc_house_data, 5, sqft_lot))  %>% arrange(desc(sqft_lot))
+```
+
+
+```{r top bedrooms, echo=FALSE}
+print(top_n(kc_house_data, 4, bedrooms))  %>% arrange(desc(bedrooms))
+```
+
+
+# Chapter 4: Factors Analysis
+## SMART Question
+Are houses of different sizes priced differently?
+
+### Comparison of sqft living with price
+
+```{r plot sqft living, echo=FALSE}
+
+plot(kc_house_data$sqft_living, kc_house_data$price, xaxt="n", yaxt="n", pch = 20, cex = .1, xlab = "Square Feet of Living Space", ylab = "Housing Price ($)", cex.axis = .75, main = "Housing Price vs. Living Space")
+abline(lm(kc_house_data$price ~ kc_house_data$sqft_living, data = kc_house_data), col = "orange")
+legend(x='topright', legend=paste('Correlation =',round(cor(kc_house_data$sqft_living, kc_house_data$price),5)))
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+axis(side=2, at=axTicks(2), 
+     labels=formatC(axTicks(2), format="d", big.mark=','))
+```
+
+```{r boxplot sqft living, echo=FALSE}
+
+max(kc_house_data$sqft_living)
+min(kc_house_data$sqft_living)
+
+sqft.living <- cut(kc_house_data$sqft_living, breaks = c(289,2940,5590,8240,10890,13540), labels = c("290-2,940", "2,941-5,590", "5,591-8,240", "8,241-10,890", "10,891-13,540"))
+
+
+ggplot(kc_house_data, aes(x=sqft.living, y=price, fill=sqft.living)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Living Space") + ylab("Housing Price ($)") + xlab("Square Feet of Living Space") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+```
+
+*explains bp test with inline code and not possible anova*
+```{r anova living, include=FALSE}
+bptest(kc_house_data$price~sqft.living)
+
+```
+
+### Comparison of sqft lot with price
+
+```{r lot summary, include=FALSE}
+summary(kc_house_data$sqft_lot)
+
+```
+
+```{r plot lot, echo=FALSE}
+
+plot(kc_house_data$sqft_lot,kc_house_data$price, cex.axis = .75, pch = 20, cex = .1, xlab = "Land Area (sqft.)", ylab = "Housing Price ($)", xaxt="n", yaxt="n", main = "Housing Price vs. Land Area")
+abline(lm(kc_house_data$price~kc_house_data$sqft_lot, data = kc_house_data), col = "orange")
+legend(x='topright', legend=paste('Correlation =',round(cor(kc_house_data$sqft_lot, kc_house_data$price),5)))
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+axis(side=2, at=axTicks(2), 
+     labels=formatC(axTicks(2), format="d", big.mark=','))
+
+```
+
+```{r boxplot lot, echo=FALSE}
+
+max(kc_house_data$sqft_lot)
+min(kc_house_data$sqft_lot)
+
+sqft.lot <- cut(kc_house_data$sqft_lot, breaks = c(519,330688,660856,991023,1321191, 1651359), labels = c("520-330K", "330K-660K", "660K-991K", "991K-1.3M", "1.3M-1.65M"))
+
+ggplot(kc_house_data, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+
+```
+
+```{r boxplot lot log, echo=FALSE}
+
+ggplot(kc_house_data, aes(x=sqft.lot, y=price.ln, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area (log)") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+```
+
+*explain results of anova inline code etc*
+
+```{r anova land}
+
+bptest(kc_house_data$price~sqft.lot)
+
+land.anova <- aov(kc_house_data$price~sqft.lot)
+summary(land.anova)
+
+TKcond <- TukeyHSD(land.anova)
+TKcond
+```
+
+
+### Comparison of number of bedrooms with price
+```{r, echo=FALSE}
+
+number.bedrooms <- cut(kc_house_data$bedrooms, breaks = c(0,3,6,9,11), labels = c("1-2", "3-5", "6-8", "9-11"))
+
+ggplot(kc_house_data, aes(x=number.bedrooms, y=price.ln, fill=number.bedrooms)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. # Bedrooms (log)") + ylab("Housing Price ($)") + xlab("# Bedrooms") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+```
+
+*same for anova bedrooms*
+
+```{r anova bedrooms}
+bptest(kc_house_data$price~number.bedrooms)
+
+```
+
+*can use chisq to see if more rooms more cost - smart question to intro, explain chisq (hypothesis, categ tranformation, results etc*
+```{r chisq rooms}
+
+price.intrv = cut(kc_house_data$price, c(0, 250000, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000))
+
+number.bathrooms <- cut(kc_house_data$bathrooms, breaks = c(0,2,4,6,8), labels = c("0.5-1.5", "2-3.5", "4-5.5", "6-8"))
+
+bed_p <- table(number.bedrooms, price.intrv)
+x2test1 = chisq.test(bed_p)
+x2test1
+
+bath_p <- table(number.bathrooms, price.intrv)
+x2test2 = chisq.test(bath_p)
+x2test2
+
+```
+
+
+
+## SMART Question
+Are houses of different quality(?) priced differently? *check all these questions make sense given what nick said*
+
+### Comparison of condition with price
+**explain well this variable, what represents etc as they asked*
+
+```{r, echo=FALSE}
+
+ggplot(kc_house_data, aes(x=condition, y=price, fill=condition)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Condition") + ylab("Housing Price ($)") + xlab("Apartment Condition") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+
+ggplot(kc_house_data, aes(x=condition, y=price.ln, fill=condition)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Condition (log)") + ylab("Housing Price ($)") + xlab("Apartment Condition") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+```
+
+*explains anova test tukey and all*
+```{r anova condition}
+bptest(price~condition, data = kc_house_data)
+
+cond.anova <- aov(kc_house_data$price~kc_house_data$condition)
+summary(cond.anova)
+
+TKcond <- TukeyHSD(cond.anova)
+TKcond
+```
+
+### Comparison of grade with price 
+*explain well this variable, what represents etc as they asked, design/construction*
+
+```{r, echo=FALSE}
+
+ggplot(kc_house_data, aes(x=grade, y=price, fill=grade)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Grade") + ylab("Housing Price ($)") + xlab("Apartment Grade") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+ggplot(kc_house_data, aes(x=grade, y=price.ln, fill=grade)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Grade (log)") + ylab("Housing Price ($)") + xlab("Apartment Grade") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+```
+
+*no anova..*
+```{r anova grade, include=FALSE}
+bptest(price~grade, data = kc_house_data)
+
+```
+
+
+*explains chi-sq results and how they related*
+```{r chisq grade}
+
+cond.tbl <- table(kc_house_data$condition, kc_house_data$grade)
+chisq.cond <- chisq.test(cond.tbl)
+chisq.cond
+```
+
+
+## SMART Question
+Are older houses priced differently?
+### Comparison of year they were built with price
+
+```{r, echo=FALSE}
+
+hist(kc_house_data$yr_built, col = heat.colors(12), cex.axis = .75, xlab = "Year Home Built", main = "Histogram of Year Built")
+
+year.built <- cut(kc_house_data$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
+
+ggplot(kc_house_data, aes(x=year.built, y=price.ln, fill=year.built)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Year Built (log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+```
+
+*no anova..*
+```{r anova year}
+bptest(kc_house_data$price~year.built)
+
+```
+
+*explain results and problems with it, introduce for next analysis below*
+
+### Comparison of year renovated with price
+
+*charts and all*
+
+*do anova for this one too*
+
+
+**compared renovated with built and see price changes too..**
+
+
+### Are older houses worst in terms of quality?
+*use chisq to assess old and quality independence*
+
+```{r chisq year}
+
+gradey.tbl <- table(kc_house_data$grade, year.built)
+chisq.gradey <- chisq.test(gradey.tbl)
+chisq.gradey
+
+```
+
+```{r chisq year}
+
+condy.tbl <- table(kc_house_data$condition, year.built)
+chisq.condy <- chisq.test(condy.tbl)
+chisq.condy
+
+```
+
+### Does quality get better when renovated?
+*use chisq to assess renovated and quality indep - replicate above chisq tests for year.renov*
+ 
+
+
+**subset for older houses with renovation and rerun both tests and see difference in time**
+
+
+
+
+# Chapter 5: Multiple Linear Regression Model
+
+## SMART Question:
+What factors influence the house price the most?
+
+### LSRL Model building
+
+Below is our regression model, along with a comprehensive correlation plot.
+```{r}
+h2 <- subset(kc_house_data,select = c(price,bedrooms,bathrooms,sqft_living,sqft_lot,floors,sqft_above,sqft_basement,yr_built ))
+hcor = cor(h2)
+corrplot(hcor, method = "number", type="upper")
+```
+
+yr_built and sqft_lot seem unrelated to price.
+
+```{r}
+model1 <- lm(price~.-sqft_lot-yr_built,data=h2)
+summary(model1)
+```
+
+The coefficient of sqft_basement is NA indicates it has problem with other variables so I drop this one.
+
+```{r}
+model2 <- lm(price~.-sqft_lot-yr_built-sqft_basement-bathrooms,data=h2)
+summary(model2)
+vif(model2)
+```
+
+Everything looks better, then I added the two factor variables into the dataset and se their effects.
+
+```{r}
+h3 <- subset(kc_house_data,select = c(price,bedrooms,sqft_living,sqft_above,floors,grade,condition) )
+summary(h3)
+```
+
+```{r}
+model3 <- lm(price~.,data=h3)
+summary(model3)
+vif(model3)
+```
+```{r}
+model11 <- lm(price~.-condition,data=h3)
+summary(model11)
+vif(model11)
+```
+
+All levels of condition are unsignificant, so we drop the condition varibale. And high grade has significant effect on price.
+
+```{r}
+h4<-subset(kc_house_data,select=c(price,bedrooms,sqft_living,sqft_above,floors,grade))
+model4<-lm(price~.+bedrooms:sqft_living+bedrooms:floors+bedrooms:sqft_above+sqft_living:floors+sqft_living:sqft_above+floors:sqft_above,data = h4)
+summary(model4)
+vif(model4)
+```
+```{r digit=9}
+model5<-lm(price~.+bedrooms:sqft_above+sqft_living:sqft_above,data = h4)
+summary(model5)
+vif(model5)
+```
+
+### Final results and approved model for preidiction of price
+*explain coefficients and all that - use inline coding etc..*
+
+
+# Chapter 6: Conclusion
+*final insights, main relationships, predictors, what to look in a real estate dataset etc..*
+*future openings for further studies, analysis, tests etc on this..*
+
+
+# Bibliography
+

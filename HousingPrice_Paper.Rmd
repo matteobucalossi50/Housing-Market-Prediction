@@ -191,7 +191,7 @@ print(aggregate(price~grade,data=kc_house_data,FUN=mean))
 ## House Size
 
 
-*add histograms for bedroom variable and sqft living variable - comment on them*
+*add histograms for bedroom variable and sqft living variable - comment on them, why such house be that in real world etc etc..*
 
 ```{r lot hist, echo=FALSE}
 hist(kc_house_data$sqft_lot, col = "yellow", cex.axis = .75, xlab = "Land Area (sqft.)", main = "Histogram of Land Area")

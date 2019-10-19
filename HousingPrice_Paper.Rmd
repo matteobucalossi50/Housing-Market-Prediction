@@ -56,10 +56,6 @@ This report is organized as follows:
 # Chapter 2: Description Data
 ## Source Data
 
-https://www.kaggle.com/harlfoxem/housesalesprediction/data
-
-https://github.com/matteobucalossi50/DATS6101_Project
-
 *can delete links and explain dataset and variables and all that, as well as what done with cleaning coding (including reasoning for log price, whici will later be more clear with graphs)* 
 
 As mentioned previously, our dataset houses 21,613 observations across 21 variables. (See below for a readout of the dataset's structure and variable names.) Variable descriptions are as follows and come from the following link: https://bit.ly/2MsyRFl; astericks next to variable name indicates usage in our analysis:
@@ -114,8 +110,6 @@ kc_house_data$grade <- as.factor(kc_house_data$grade)
 price.ln = log(kc_house_data$price)
 
 ```
-
-A brief overview of the dataset yields the following observations for housing price: the minimum price is $78,000, while the maximum is $7,700,000 (quite a large range); the mean of the dataset is $540,198 (indicating that dataset is right-skewed, as further indicated by a histogram); the standard deviation of the dataset is $367,141.60; and the variance is 134,792,956,735 (quite large, indicating "that the data points are very spread out from the mean, and from one another" (https://bit.ly/2MZ1cCn).
 
 ```{r, include=FALSE}
 summary(kc_house_data$price)
@@ -179,6 +173,8 @@ house.map
 
 *descibe how price is min max etc, then inline code for price per sqft and how expensive seattle is etc*
 
+A brief overview of the dataset yields the following observations for housing price: the minimum price is $78,000, while the maximum is $7,700,000 (quite a large range); the mean of the dataset is $540,198 (indicating that dataset is right-skewed, as further indicated by the histogram below); the standard deviation of the dataset is $367,141.60; and the variance is 134,792,956,735 (quite large, indicating "that the data points are very spread out from the mean, and from one another" (https://bit.ly/2MZ1cCn).
+
 ```{r price hist, echo=FALSE}
 
 hist(kc_house_data$price, xaxt="n", ylim = c(0,14000), col = "green", main = "Housing Price Histogram", xlab = "Housing Price ($)", cex.axis = .75)
@@ -211,7 +207,7 @@ price per sqft:
   2014 -> 36.06  
   2015 -> 35.11  
 
-### how do the most expensive houses look like?
+### What do the most expensive houses look like?
 
 ```{r top price, echo=FALSE}
 print(top_n(kc_house_data, 5, price)) %>% arrange(desc(price))
@@ -231,8 +227,19 @@ print(aggregate(price~grade,data=kc_house_data,FUN=mean))
 
 ## House Size
 
-
 *add histograms for bedroom variable and sqft living variable - comment on them, why such house be that in real world etc etc..*
+
+``{r bedroom hist, echo=FALSE}
+
+hist(kc_house_data$bedrooms[kc_house_data$bedrooms<=6], col = "yellow", cex.axis = .75, xlab = "# Bedrooms", main = "# of Bedrooms Histogram")
+
+```
+
+```{r sqft_living hist, echo=FALSE}
+
+hist(kc_house_data$sqft_living[kc_house_data$sqft_living<=6000], col = "yellow", cex.axis = .75, xlab = "Sqft Living", main = "Sqft Living Histogram")
+
+```
 
 ```{r lot hist, echo=FALSE}
 hist(kc_house_data$sqft_lot, col = "yellow", cex.axis = .75, xlab = "Land Area (sqft.)", main = "Histogram of Land Area")

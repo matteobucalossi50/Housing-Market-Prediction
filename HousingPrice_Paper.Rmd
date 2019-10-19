@@ -42,7 +42,7 @@ loadPkg("modelr")
 
 *insert intro here: why this dataset, background research on topic and data, what this data and report about, table of contents description*
 
-Seattle boasts among the "hottest" housing markets in the United States; as of July 2018, Seattle "led the nation in home price gains" for 21 straight months, topped only by Portland in the 1990s – a trend driven by the city's tech sector and a  lack of supply compared with demand (https://bit.ly/2v5UMcn). Given the Seattle housing market's notoriety for high prices, we were interested in exploring which variables affect housing price in this market. With this goal in mind, we found a public dataset on Kaggle ("House Sales in King County, USA") offering 21,613 observations across 21 variables. Although it doesn't explore macro-level variables affecting housing price (such as the local job market, Amazon presence, etc.), it does focus on micro-level variables, such as renovations, number of bedrooms, square feet of living space, etc. that are common to virtually all housing markets in the United States. An analysis of Seattle's housing market could lay the groundwork for future comparative analysis with other housing markets.
+Seattle boasts among the "hottest" housing markets in the United States; as of July 2018, Seattle "led the nation in home price gains" for 21 straight months, topped only by Portland in the 1990s – a trend driven by the city's tech sector and a  lack of supply compared with demand (https://bit.ly/2v5UMcn). Given the Seattle housing market's notoriety for high prices, we were interested in exploring which variables affect housing price in this market. With this goal in mind, we found a public dataset on Kaggle ("House Sales in King County, USA") offering 21,613 observations across 21 variables. According to Kaggle, it "includes homes sold between May 2014 and May 2015." Although it doesn't explore macro-level variables affecting housing price (such as the local job market, Amazon presence, etc.), it does focus on micro-level variables, such as renovations, number of bedrooms, square feet of living space, etc. that are common to virtually all housing markets in the United States. As a result, our analysis could lay the groundwork for future comparative analysis with other housing markets.
 
 This report is organized as follows:
 
@@ -115,6 +115,8 @@ price.ln = log(kc_house_data$price)
 
 ```
 
+A brief overview of the dataset yields the following observations for housing price: the minimum price is $78,000, while the maximum is $7,700,000 (quite a large range); the mean of the dataset is $540,198 (indicating that dataset is right-skewed, as further indicated by a histogram); the standard deviation of the dataset is $367,141.60; and the variance is 134,792,956,735 (quite large, indicating "that the data points are very spread out from the mean, and from one another" (https://bit.ly/2MZ1cCn).
+
 ```{r, include=FALSE}
 summary(kc_house_data$price)
 
@@ -130,7 +132,7 @@ print(var(kc_house_data$price))
 
 ## Geographic Coverage of Data
 Below is a visualization of the points in the dataset by price, plotted with the leaflet library.
-Note that the data have been divided by unequal bins to provide a better visualization of the distribution of housing price, so please read the legend carefully.
+Note that the data have been divided by unequal bins to provide a better visualization of the distribution of housing price, so please read the legend carefully. More expensive houses tend to be concentrated near the water and center of the city.
  
 ```{r geo, echo=FALSE}
 price.bins <- c(0, 250000, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000, 8000000)
@@ -149,7 +151,7 @@ house.map
 
 ```
 
-Here instead is a visualization of the observations by property lot sqft. Again, data have been divided by unequal bins to provide a better visualization of the distribution of housing price, so please read the legend carefully.
+Here instead is a visualization of the observations by property lot sqft. Again, data have been divided by unequal bins to provide a better visualization of the distribution of housing price, so please read the legend carefully. Our observation follows common sense: the further one ventures outside the city center, the more land there is.
 
 ```{r geo, echo=FALSE}
 

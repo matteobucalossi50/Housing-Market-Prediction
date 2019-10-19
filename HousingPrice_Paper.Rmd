@@ -62,27 +62,27 @@ https://github.com/matteobucalossi50/DATS6101_Project
 
 *can delete links and explain dataset and variables and all that, as well as what done with cleaning coding (including reasoning for log price, whici will later be more clear with graphs)* 
 
-As mentioned previously, our dataset houses 21,613 observations across 21 variables. These variables include the following (variable descriptions come from the following link: https://bit.ly/2MsyRFl):
+As mentioned previously, our dataset houses 21,613 observations across 21 variables. These variables include the following (variable descriptions come from the following link: https://bit.ly/2MsyRFl; astericks next to variable name indicates usage in our analysis):
 
 1. Id (unique ID for each home sold)
 2. Date (date of the home sale)
-3. Price (price of each home sold)
-4. Bedrooms (number of bedrooms)
+3. Price (price of each home sold)***
+4. Bedrooms (number of bedrooms)***
 5. Bathrooms (number of bathrooms, where .5 accounts for a room with a toilet but no shower)
-6. Sqft_living (square footage of the apartments' interior living space)
-7. Sqft_lot (square footage of the land space)
+6. Sqft_living (square footage of the apartments' interior living space)***
+7. Sqft_lot (square footage of the land space)***
 8. Floors (number of floors)
 9. Waterfront (a dummy variable for whether the apartment was overlooking the waterfront or not; 0 represents no waterfront)
 10. View (an index from 0 to 4 of how the view of the property was)
-11. Condition (an index from 1 to 5 on the condition of the apartment, with the lowest number representing poor condition)
-12. Grade (an index from 1 to 13, with the lowest number representation poor construction and design)
+11. Condition (an index from 1 to 5 on the condition of the apartment, with the lowest number representing poor condition)***
+12. Grade (an index from 1 to 13, with the lowest number representation poor construction and design)***
 13. Sqft_above (the the square footage of the interior housing space that is above ground level)
 14. Sqft_basement (the square footage of the interior housing space that is below ground level)
-15. yr_built (the year the house was initially built)
-16. yr_renovated (the year of the house's last renovation)
-17. zipcode (what zipcode area the house is in)
-18. Lat (latitude)
-19. Long (longitude)
+15. yr_built (the year the house was initially built)***
+16. yr_renovated (the year of the house's last renovation)***
+17. zipcode (what zipcode area the house is in)***
+18. Lat (latitude)***
+19. Long (longitude)***
 20. Sqft_living15 (the square footage of the interior housing living space for the nearest 15 neighbors)
 21. Sqft_lot15 (the square footage of the land lots of the nearest 15 neighbors)
 

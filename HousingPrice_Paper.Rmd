@@ -92,8 +92,7 @@ colnames(kc_house_data)
 20. Sqft_living15 (the square footage of the interior housing living space for the nearest 15 neighbors)
 21. Sqft_lot15 (the square footage of the land lots of the nearest 15 neighbors)
 
-We dropped "Id" and "Date" because these are independent variables with no relation to price. We also dropped "floors" because it can be considered a proxy for sqft_living. "Waterfront" and "View" were dropped because the vast majority of properties were coded as "0". We dropped sqft_basement and sqft_above because they were corollaries of "sqft_living" (we didn't want redundancy in our analysis). We also dropped "sqft_living 15" and "sqft_lot15" because we were interested only in the attributes of individual houses, not those of their surrounding neighborhoods.
-
+We dropped "Id" and "Date" because these are independent variables with no relation to price. We also dropped "floors" because it can be considered a proxy for sqft_living. "Waterfront" and "View" were dropped because the vast majority of properties were coded as "0". We dropped sqft_basement and sqft_above because they were corollaries of "sqft_living" (we didn't want redundancy in our analysis). We also dropped "sqft_living 15" and "sqft_lot15" because we were interested only in the attributes of individual houses, not those of their surrounding neighborhoods (although that could make for an interesting follow-up study). 
 
 ```{r clean, include=FALSE}
 kc_house_data <- subset(kc_house_data, select = -c(9, 10))

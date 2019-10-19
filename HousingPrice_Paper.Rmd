@@ -62,7 +62,13 @@ https://github.com/matteobucalossi50/DATS6101_Project
 
 *can delete links and explain dataset and variables and all that, as well as what done with cleaning coding (including reasoning for log price, whici will later be more clear with graphs)* 
 
-As mentioned previously, our dataset houses 21,613 observations across 21 variables. These variables include the following (variable descriptions come from the following link: https://bit.ly/2MsyRFl; astericks next to variable name indicates usage in our analysis):
+As mentioned previously, our dataset houses 21,613 observations across 21 variables. (See below for a readout of the dataset's structure and variable names.) Variable descriptions are as follows and come from the following link: https://bit.ly/2MsyRFl; astericks next to variable name indicates usage in our analysis:
+
+```{r, echo=FALSE}
+kc_house_data <- read.csv("kc_house_data.csv")
+str(kc_house_data)
+colnames(kc_house_data)
+```
 
 1. Id (unique ID for each home sold)
 2. Date (date of the home sale)
@@ -86,11 +92,8 @@ As mentioned previously, our dataset houses 21,613 observations across 21 variab
 20. Sqft_living15 (the square footage of the interior housing living space for the nearest 15 neighbors)
 21. Sqft_lot15 (the square footage of the land lots of the nearest 15 neighbors)
 
-```{r, echo=FALSE}
-kc_house_data <- read.csv("kc_house_data.csv")
-str(kc_house_data)
-colnames(kc_house_data)
-```
+We dropped "Id" and "Date" because these are independent variables with no relation to price. We also dropped "floors" because it can be considered a proxy for sqft_living. "Waterfront" and "View" were dropped because the vast majority of properties were coded as "0". We dropped sqft_basement and sqft_above because they were corollaries of "sqft_living" (we didn't want redundancy in our analysis). We also dropped "sqft_living 15" and "sqft_lot15" because we were interested only in the attributes of individual houses, not those of their surrounding neighborhoods.
+
 
 ```{r clean, include=FALSE}
 kc_house_data <- subset(kc_house_data, select = -c(9, 10))

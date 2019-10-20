@@ -42,7 +42,7 @@ loadPkg("modelr")
 
 *insert intro here: why this dataset, background research on topic and data, what this data and report about, table of contents description*
 
-Seattle boasts among the "hottest" housing markets in the United States; as of July 2018, Seattle "led the nation in home price gains" for 21 straight months, topped only by Portland in the 1990s – a trend driven by the city's tech sector and a  lack of supply compared with demand (https://bit.ly/2v5UMcn). Given the Seattle housing market's notoriety for high prices, we were interested in exploring which variables affect housing price in this market. With this goal in mind, we found a public dataset on Kaggle ("House Sales in King County, USA") offering 21,613 observations across 21 variables. According to Kaggle, it "includes homes sold between May 2014 and May 2015." Although it doesn't explore macro-level variables affecting housing price (such as the local job market, Amazon presence, etc.), it does focus on micro-level variables, such as renovations, number of bedrooms, square feet of living space, etc. that are common to virtually all housing markets in the United States. As a result, our analysis could lay the groundwork for future comparative analysis with other housing markets.
+Seattle boasts among the "hottest" housing markets in the United States; as of July 2018, Seattle "led the nation in home price gains" for 21 straight months, topped only by Portland in the 1990s – a trend driven by the city's tech sector and a  lack of supply compared with demand (https://bit.ly/2v5UMcn). Given the Seattle housing market's notoriety for high prices, we were interested in exploring which variables affect housing price in this market. With this goal in mind, we found a public dataset on Kaggle ("House Sales in King County, USA") offering 21,613 observations across 21 variables. According to Kaggle, it "includes homes sold between May 2014 and May 2015." Although it doesn't explore macro-level variables affecting housing price (such as the local job market, Amazon presence, etc.), it does focus on micro-level variables, such as renovations, number of bedrooms, square feet of living space, etc. that are common to virtually all housing markets in the United States. As a result, our analysis could lay the groundwork for future comparative analysis with other housing markets across the country.
 
 This report is organized as follows:
 
@@ -173,7 +173,7 @@ house.map
 
 *descibe how price is min max etc, then inline code for price per sqft and how expensive seattle is etc*
 
-A brief overview of the dataset yields the following observations for housing price: the minimum price is $78,000, while the maximum is $7,700,000 (quite a large range); the mean of the dataset is $540,198 (indicating that dataset is right-skewed, as further indicated by the histogram below); the standard deviation of the dataset is $367,141.60; and the variance is 134,792,956,735 (quite large, indicating "that the data points are very spread out from the mean, and from one another" (https://bit.ly/2MZ1cCn).
+A brief overview of the dataset yields the following observations for housing price: the minimum price is $78,000, while the maximum is $7,700,000 (quite a large range); the mean of the dataset is $540,198 (indicating that the dataset is right-skewed, as further indicated by the histogram below); the standard deviation of the dataset is $367,141.60; and the variance is 134,792,956,735 (quite large, indicating "that the data points are very spread out from the mean, and from one another" (https://bit.ly/2MZ1cCn).
 
 ```{r price hist, echo=FALSE}
 
@@ -189,23 +189,7 @@ axis(side=1, at=axTicks(1),
 qqnorm(kc_house_data$price, pch = 20, cex = .5, main = "Housing Prices: Normal Q-Q Plot", ylab = "Housing Price ($)", cex.axis = .75)
 
 ```
-
-```{r price per year, include=FALSE}
-
-date_price <- kc_house_data[c('date', 'price', 'sqft_living', 'sqft_lot')]
-date_price$date <- as.character(date_price$date)
-date_price$date <- substr(date_price$date, 1, nchar(date_price$date)-11)
-date_price <- date_price[order(date_price$date),]
-date_price$date <- as.factor(date_price$date)
-date_price %>%
-  group_by(date) %>%
-  summarise(price = sum(price), sqft_living=sum(sqft_living), sqft_lot=sum(sqft_lot), price_per_sqft = price/sqft_living)
-
-```
-
-price per sqft:  
-  2014 -> 36.06  
-  2015 -> 35.11  
+Just for context, the following readouts offer cross sections of Seattle's most expensive houses; average prices for each condition level; and average prices for each grade level.
 
 ### What do the most expensive houses look like?
 
@@ -228,6 +212,8 @@ print(aggregate(price~grade,data=kc_house_data,FUN=mean))
 ## House Size
 
 *add histograms for bedroom variable and sqft living variable - comment on them, why such house be that in real world etc etc..*
+
+Below we have included histograms for "bedrooms", "sqft_living", and "sqft_lot". Upon inspecting the graphs, it becomes clear that most of the properties in this dataset have around 3 bedrooms, while the majority of properties are around 1000-2000 square feet (for reference, in 2015, the average US house size was around 2,600 square feet (https://bit.ly/32zY9Hi)); as for sqft_lot, most of the properties have between 5,000 and 10,000 square feet of land. As with the housing price histogram shown earlier, these histograms are right-skewed.
 
 ``{r bedroom hist, echo=FALSE}
 

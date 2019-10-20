@@ -240,7 +240,7 @@ axis(side=1, at=axTicks(1),
 ### What do the largest houses look like?
 *introduce the reasoning of this passage and thendescribe each output with reason under each of them*
 
-
+Going into this project, we hypothesized that larger houses would be priced higher than smaller houses. House size is determined in large part by "sqft_living", of which "bathrooms" and "bedrooms" are a part.
 
 It is apparent here that the largest houses are also among the most expensive – they are all priced in the millions of dollars, which are outliers when compared to the dataset as a whole.
 
@@ -305,6 +305,8 @@ bptest(kc_house_data$price~sqft.living)
 
 ### Comparison of sqft lot with price
 
+Next up in our exploratory data analysis is housing price vs. "sqft_lot". How does land area correlate with housing price? According to our scatterplot, not very highly – there is a positive correlation of only .08988. This seems to suggest that sqft_lot is less influential on housing price than sqft_living. Indeed, the vast majority of data points in the scatterplot seem to trend upward in price with relatively small increases in land area.
+
 ```{r lot summary, include=FALSE}
 summary(kc_house_data$sqft_lot)
 
@@ -321,6 +323,8 @@ axis(side=2, at=axTicks(2),
      labels=formatC(axTicks(2), format="d", big.mark=','))
 
 ```
+
+Next, let's take a look at the same data in a boxplot.
 
 ```{r boxplot lot, echo=FALSE}
 

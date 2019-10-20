@@ -305,7 +305,7 @@ bptest(kc_house_data$price~sqft.living)
 
 ### Comparison of sqft lot with price
 
-Next up in our exploratory data analysis is housing price vs. "sqft_lot". How does land area correlate with housing price? According to our scatterplot, not very highly – there is a positive correlation of only .08988. This seems to suggest that sqft_lot is less influential on housing price than sqft_living. Indeed, the vast majority of data points in the scatterplot seem to trend upward in price with relatively small increases in land area.
+Next up in our exploratory data analysis is housing price vs. "sqft_lot". How does land area correlate with housing price? According to our scatterplot, not very highly – there is a positive correlation of only .08988. This seems to suggest that sqft_lot is more weakly related to housing price than sqft_living. Indeed, the vast majority of data points in the scatterplot seem to trend upward in price with relatively small increases in land area.
 
 ```{r lot summary, include=FALSE}
 summary(kc_house_data$sqft_lot)
@@ -324,7 +324,7 @@ axis(side=2, at=axTicks(2),
 
 ```
 
-Next, let's take a look at the same data in a boxplot.
+Next, let's take a look at the same data in a boxplot. Unfortunately, the visualization isn't very readable; let's convert housing price through a logarithmic function to improve our y-axis scale.
 
 ```{r boxplot lot, echo=FALSE}
 
@@ -338,7 +338,11 @@ ggplot(kc_house_data, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() 
 
 ```
 
+The modified boxplot below (with the logarithmic scale) is much easier to interpret. We can see that housing price increases as land area increases, but only to an extent. Note that houses in the 991,000-1.3M sqft and 1.3M-1.65M sqft ranges appear to buck the trend. Once again, this can be explained by the fact that only a few houses are part of these two intervals – only 4 to be exact.
+
 ```{r boxplot lot log, echo=FALSE}
+
+nrow(kc_house_data[kc_house_data$sqft_lot >= 991000, ])
 
 ggplot(kc_house_data, aes(x=sqft.lot, y=price.ln, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area (log)") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
 
@@ -359,7 +363,14 @@ TKcond
 
 
 ### Comparison of number of bedrooms with price
+
+Here, we have a logarithmic box plot of housing price vs. "bedrooms". There appears to be a clear trend: as the nnumber of bedrooms increases, housing price increases as well. The 9-11 interval bucks the trend slightly, but again, this can be explained by the fact that only 10 houses are part of this interval, compared with 21,586 total for the others.
+
 ```{r, echo=FALSE}
+
+nrow(kc_house_data[kc_house_data$bedrooms >= 9, ])
+
+nrow(kc_house_data[kc_house_data$bedrooms <= 8, ])
 
 number.bedrooms <- cut(kc_house_data$bedrooms, breaks = c(0,3,6,9,11), labels = c("1-2", "3-5", "6-8", "9-11"))
 

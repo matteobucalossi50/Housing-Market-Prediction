@@ -193,6 +193,8 @@ Just for context, the following readouts offer cross sections of Seattle's most 
 
 ### What do the most expensive houses look like?
 
+
+
 ```{r top price, echo=FALSE}
 print(top_n(kc_house_data, 5, price)) %>% arrange(desc(price))
 ```
@@ -235,17 +237,23 @@ axis(side=1, at=axTicks(1),
      labels=formatC(axTicks(1), format="d", big.mark=','))
 ```
 
-### How do the largest houses look like?
+### What do the largest houses look like?
 *introduce the reasoning of this passage and thendescribe each output with reason under each of them*
+
+
+
+It is apparent here that the largest houses are also among the most expensive – they are all priced in the millions of dollars, which are outliers when compared to the dataset as a whole.
+
 ```{r top sqftliv, echo=FALSE}
 print(top_n(kc_house_data, 5, sqft_living)) %>% arrange(desc(sqft_living))
 ```
 
+The properties with the largest amount of land are also priced highly, but not as highly as those listed in the "sqft_living" readout. This could suggest a lower correlation between housing price and sqft_lot than that between housing price and sqft_living.
 
 ```{r top sqftlot, echo=FALSE}
 print(top_n(kc_house_data, 5, sqft_lot))  %>% arrange(desc(sqft_lot))
 ```
-
+The properties with the largest number of bedrooms are also priced highly (around or above the dataset mean of $540,000), but not quite as highly as those in the "sqft_living" readout. Since "bedrooms" contributes in part – but not in whole – to sqft_living, it makes sense that its correlation with housing price is lower than that of sqft_living.
 
 ```{r top bedrooms, echo=FALSE}
 print(top_n(kc_house_data, 4, bedrooms))  %>% arrange(desc(bedrooms))

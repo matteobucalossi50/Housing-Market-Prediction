@@ -364,7 +364,7 @@ TKcond
 
 ### Comparison of number of bedrooms with price
 
-Here, we have a logarithmic box plot of housing price vs. "bedrooms". There appears to be a clear trend: as the nnumber of bedrooms increases, housing price increases as well. The 9-11 interval bucks the trend slightly, but again, this can be explained by the fact that only 10 houses are part of this interval, compared with 21,586 total for the others.
+Here, we have a logarithmic box plot of housing price vs. "bedrooms". There appears to be a clear trend: as the number of bedrooms increases, housing price increases as well. The 9-11 interval bucks the trend slightly, but again, this can be explained by the fact that only 10 houses are part of this interval, compared with 21,586 total for the others.
 
 ```{r, echo=FALSE}
 
@@ -405,10 +405,12 @@ x2test2
 
 
 ## SMART Question
-Are houses of different quality(?) priced differently? *check all these questions make sense given what nick said*
+Are houses of different quality priced differently? *check all these questions make sense given what nick said*
 
 ### Comparison of condition with price
 **explain well this variable, what represents etc as they asked*
+
+Here, we compare "condition" with housing price. Once again, "condition" represents an index from 1 to 5, with the lowest number representing poor condition. Once we take a look at the boxplot below (the second one is logarithmized for clearer visualization), it becomes clear that apartment condition correlates positively with housing price. 
 
 ```{r, echo=FALSE}
 
@@ -432,6 +434,8 @@ TKcond
 
 ### Comparison of grade with price 
 *explain well this variable, what represents etc as they asked, design/construction*
+
+Here we have a boxplot comparing "grade" with housing price. Once again, "grade" represents an index from 1 to 13, with the lowest number representing poor construction and design. The trend is clear: construction and design grade correlate positively with housing price.
 
 ```{r, echo=FALSE}
 
@@ -461,6 +465,8 @@ chisq.cond
 Are older houses priced differently?
 ### Comparison of year they were built with price
 
+Here, we have a comparison of "yr_built" with housing price. Once we take a look at the logarithmic boxplot, we see no obvious trends. Housing price trends downward from 1900-1969, and then picks back up from 1970-2015. What might explain this? Well, "yr_built" does not take "yr_renovated" into account. For instance, two equivalent houses built in the same year could have different house prices, depending on if one has been renovated while the other hasn't.
+
 ```{r, echo=FALSE}
 
 hist(kc_house_data$yr_built, col = heat.colors(12), cex.axis = .75, xlab = "Year Home Built", main = "Histogram of Year Built")
@@ -470,6 +476,17 @@ year.built <- cut(kc_house_data$yr_built, breaks = c(1899,1923,1946,1969,1992,20
 ggplot(kc_house_data, aes(x=year.built, y=price.ln, fill=year.built)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Year Built (log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
 
 ```
+
+Let's construct the same boxplots, but this time indexed by "yr_renovated".
+
+```{r, echo=FALSE}
+
+year.built <- cut(kc_house_data$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
+
+ggplot(kc_house_data, aes(x=year.built, y=price.ln, fill=year.built)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Year Built (log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+```
+
 
 *no anova..*
 ```{r anova year}

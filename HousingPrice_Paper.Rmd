@@ -516,8 +516,6 @@ ggplot(renov.new, aes(x=year.renov.rennew, y=price.ln.rennew, fill=year.renov.re
 
 ```
 
-```
-
 
 *no anova..*
 ```{r anova year}

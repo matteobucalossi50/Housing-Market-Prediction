@@ -89,7 +89,7 @@ str(kc_house_data)
 
 For our exploratory data analysis, we ignored "Id" and "Date" because these are independent variables with no relation to price. We also ignored "floors" because it can be considered a proxy for sqft_living. "Waterfront" and "View" were dropped because the vast majority of properties were coded as "0". We ignored sqft_basement and sqft_above because they were corollaries of "sqft_living" (we didn't want redundancy in our analysis). We also ignored "sqft_living 15" and "sqft_lot15" because we were interested only in the attributes of individual houses, not those of their surrounding neighborhoods (although that could make for an interesting follow-up study).
 
-Following these decisions, we cleaned the data accordingly: we dropped "waterfront" and "view"; we subsetted the dataset to include only properties with more than 0 bedrooms and bathrooms (we considered these "outlier" properties); we subsetted the dataset to include only properties with less than 30 bedrooms (again, to exclude outlier properties); we dropped "NA" values from the dataset to simplify our analysis ("NA" values are hard to perform operations on); we converted "condition" and "grade" into factor variables because they are effectively intervals; and we ran "housing price" through a logarithmic function to make for better visualization.
+Following these decisions, we cleaned the data accordingly: we dropped "waterfront" and "view"; we subsetted the dataset to include only properties with more than 0 bedrooms and bathrooms (we considered these "outlier" properties); we subsetted the dataset to include only properties with less than 30 bedrooms (given the likely mistake of recording that many rooms in much smaller houses in terms of sqft); we dropped "NA" values from the dataset to simplify our analysis ("NA" values are hard to perform operations on); we converted "condition" and "grade" into factor variables because they are effectively intervals; and we ran "housing price" through a logarithmic function to make for better visualization.
 
 ```{r clean, include=FALSE}
 kc_house_data <- subset(kc_house_data, select = -c(9, 10))
@@ -111,7 +111,6 @@ price.ln = log(kc_house_data$price)
 ```
 
 
-
 ## Geographic Coverage of Data
 Below is a visualization of the points in the dataset by price, plotted with the leaflet library.
 Note that the data have been divided by unequal bins to provide a better visualization of the distribution of housing price, so please read the legend carefully. More expensive houses tend to be concentrated near the water and center of the city.
@@ -119,17 +118,17 @@ Note that the data have been divided by unequal bins to provide a better visuali
 ```{r geo, echo=FALSE}
 price.bins <- c(0, 250000, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000, 8000000)
 qpal <-  colorBin(palette = 'GnBu', kc_house_data$price, bins= price.bins, n = 9)
-house.map <- leaflet(kc_house_data) %>% 
+house.map1 <- leaflet(kc_house_data) %>% 
   addProviderTiles("CartoDB.Positron") %>% 
   addCircleMarkers(lng = ~long, lat = ~lat, 
                    stroke = FALSE, 
                    fillOpacity = 5, 
                    color = ~qpal(price), 
                    radius = 2,
-                   label = ~as.character(paste0('Price: $', price, ", ", 'condition: ', condition, ", ", 'year built: ', yr_built))) %>%
+                   label = ~as.character(paste0('Price: $', price, ", ", 'condition: ', condition, ", ", 'year built: ', yr_built, 'Sqft living: ', sqft_living))) %>%
   addLegend('bottomright', pal = qpal, values = ~price, opacity = 1, title = 'Price', labFormat = labelFormat(prefix = '$', between = ' - $'))
 
-house.map
+house.map1
 
 ```
 
@@ -140,17 +139,17 @@ Here instead is a visualization of the observations by property lot sqft. Again,
 sqft.bins <- c(519,10000,200000,400000,660856, 1651359)
 
 qpal <-  colorBin(palette = 'YlOrBr', kc_house_data$sqft_lot, bins= sqft.bins, n = 5)
-house.map <- leaflet(kc_house_data) %>% 
+house.map2 <- leaflet(kc_house_data) %>% 
   addProviderTiles("CartoDB.DarkMatter") %>% 
   addCircleMarkers(lng = ~long, lat = ~lat, 
                    stroke = FALSE, 
                    fillOpacity = 5, 
                    color = ~qpal(sqft_lot), 
                    radius = 2,
-                   label = ~as.character(paste0('Sqft_lot: $', sqft_lot, ", ", 'condition: ', condition, ", ", 'year built: ', yr_built, 'price: ', price))) %>%
+                   label = ~as.character(paste0('Sqft_lot: ', sqft_lot, ", ", 'condition: ', condition, ", ", 'year built: ', yr_built, 'price: $', price))) %>%
   addLegend('bottomright', pal = qpal, values = ~sqft_lot, opacity = 1, title = 'Sqft_lot', labFormat = labelFormat( between = ' - '))
 
-house.map
+house.map2
 
 ```
 
@@ -171,7 +170,7 @@ print(var(kc_house_data$price))
 
 ```
 
-A brief overview of the dataset yields the following observations for housing price: the minimum price is \$78,000, while the maximum is \$7,700,000 (quite a large range); the mean of the dataset is \$540,198 (indicating that the dataset is right-skewed, as further indicated by the histogram below); the standard deviation of the dataset is \$`r sd(kc_house_data$price)`; and the variance is 134,792,956,735 (quite large, indicating "that the data points are very spread out from the mean, and from one another" (https://bit.ly/2MZ1cCn).
+A brief overview of the dataset yields the following observations for housing price: the minimum price is \$78,000, while the maximum is \$7,700,000 (quite a large range); the mean of the dataset is \$540,198 (indicating that the dataset is right-skewed, as further indicated by the histogram below); the standard deviation of the dataset is \$ 367,142; and the variance is 134,792,956,735 (quite large, indicating "that the data points are very spread out from the mean, and from one another" (https://bit.ly/2MZ1cCn).
 
 ```{r price hist, echo=FALSE}
 

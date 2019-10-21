@@ -466,11 +466,19 @@ ggplot(kc_house_data, aes(x=year.built, y=price.ln, fill=year.built)) + geom_box
 
 ```
 
+```{r yr_built_by_renovation_status, echo=FALSE}
+
+norenov <- subset(kc_house_data, kc_house_data$yr_renovated == 0)
+price.ln.noren = log(norenov$price)
+year.built.noren <- cut(norenov$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
+
+```
+
 Let's construct the same boxplots, but this time indexed by "yr_renovated".
 
 Unfortunately, the vast majority of properties in this dataset have never been renovated (`r nrow(norenov)` to be exact). This means that only 914 properties have been renovated. This makes the resulting boxplots somewhat uninformative – the larger population boxplot (not renovated) largely mirrors the patterns of the previous graph, and the smaller population graph (renovated) is based on a population too small to run meaningful analysis on. We have included the graphs here to showcase our thought process, but we are well aware of their limitations.
 
-```{r yr_built_by_renovation_status, echo=FALSE}
+```{r yr_built_by_renovation_status2, echo=FALSE}
 
 norenov <- subset(kc_house_data, kc_house_data$yr_renovated == 0)
 price.ln.noren = log(norenov$price)
@@ -575,14 +583,14 @@ h2 <- subset(kc_house_data,select = c(price,bedrooms,bathrooms,sqft_living,sqft_
 hcor = cor(h2)
 corrplot(hcor, method = "number", type="upper")
 ```
-#### yr_built and sqft_lot seem unrelated to price as their correlation coefficient is almost 0; accordingly, we do not choose them as independent variables to predict house price.
+yr_built and sqft_lot seem unrelated to price as their correlation coefficient is almost 0; accordingly, we do not choose them as independent variables to predict house price.
 
 
 ```{r}
 model1 <- lm(price~.-sqft_lot-yr_built,data=h2)
 summary(model1)
 ```
-#### The coefficient of "sqft_basement" is NA, which indicates it has a problem with the other variables, so we dropped this one. And the p-value of "bathroom" is too large (meaning it's insignificant), so we dropped this one as well.
+The coefficient of "sqft_basement" is NA, which indicates it has a problem with the other variables, so we dropped this one. And the p-value of "bathroom" is too large (meaning it's insignificant), so we dropped this one as well.
 
 
 ```{r}
@@ -591,7 +599,7 @@ summary(model2)
 vif(model2)
 ```
 
-#### Everything looks better now; we also checked the VIF value of each variable and none of them is too large, indicating no  multicollineraty. We then added the two factor variables ("grade" and "condition") into the dataset to see their effects.
+Everything looks better now; we also checked the VIF value of each variable and none of them is too large, indicating no  multicollineraty. We then added the two factor variables ("grade" and "condition") into the dataset to see their effects.
 
 ```{r}
 h3 <- subset(kc_house_data,select = c(price,bedrooms,sqft_living,sqft_above,floors,grade,condition) )
@@ -604,14 +612,14 @@ summary(model3)
 vif(model3)
 ```
 
-#### The 5 levels of the "condition" variable are all insignificant, so we can  drop the "condition" variable. For the "grade" variable, higher grade levels have significant effects on price. By contrast, low grade does not affect price significantly. 
+The 5 levels of the "condition" variable are all insignificant, so we can  drop the "condition" variable. For the "grade" variable, higher grade levels have significant effects on price. By contrast, low grade does not affect price significantly. 
 
 ```{r}
 model11 <- lm(price~.-condition,data=h3)
 summary(model11)
 vif(model11)
 ```
-#### Now, we've added the interaction term into the model, since we want to see if the correlation of variables would affect the price prediction. We first put all interactions into the model to see what would happen.
+Now, we've added the interaction term into the model, since we want to see if the correlation of variables would affect the price prediction. We first put all interactions into the model to see what would happen.
 
 ```{r}
 h4<-subset(kc_house_data,select=c(price,bedrooms,sqft_living,sqft_above,floors,grade))
@@ -620,7 +628,7 @@ summary(model4)
 vif(model4)
 ```
 
-#### We dropped the insignificant interactions and some interactions would cause certain variables to be insignificant as well, so we also drop these variables .Here is what's left; this model seems nice. 
+We dropped the insignificant interactions and some interactions would cause certain variables to be insignificant as well, so we also drop these variables .Here is what's left; this model seems nice. 
 
 ```{r digit=9}
 model5<-lm(price~.+bedrooms:sqft_above+sqft_living:sqft_above,data = h4)
@@ -632,7 +640,7 @@ vif(model5)
 *explain coefficients and all that - use inline coding etc..*
 ###Price = 142000 +bedrooms*(-31710+10.72*sqft_above)+sqft_living*(170+2.943*sqft_above)+sqft_above*(-228.6)+floors*14570+grade()*
 
-#### Problem: As the price histogram above is quite left-skewed, it means there are many outliers whose price is very high in the dataset. While we built the model, we did not exclude the outliers as we considered these values important. As a result, our final model is also skewed a bit. It means that for low price houses, our model may predict higher-than-normal prices, but for high price house, our model will predict lower-than-normal prices. 
+Problem: As the price histogram above is quite left-skewed, it means there are many outliers whose price is very high in the dataset. While we built the model, we did not exclude the outliers as we considered these values important. As a result, our final model is also skewed a bit. It means that for low price houses, our model may predict higher-than-normal prices, but for high price house, our model will predict lower-than-normal prices. 
 
 
 # Chapter 6: Conclusion

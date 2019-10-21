@@ -147,7 +147,7 @@ house.map
 
 Here instead is a visualization of the observations by property lot sqft. Again, data have been divided by unequal bins to provide a better visualization of the distribution of housing price, so please read the legend carefully. Our observation follows common sense: the further one ventures outside the city center, the more land there is.
 
-```{r geo, echo=FALSE}
+```{r geo2, echo=FALSE}
 
 sqft.bins <- c(519,10000,200000,400000,660856, 1651359)
 
@@ -561,7 +561,7 @@ chisq.gradey
 
 ```
 
-```{r chisq year}
+```{r chisq year 2}
 
 condy.tbl <- table(kc_house_data$condition, year.built)
 chisq.condy <- chisq.test(condy.tbl)

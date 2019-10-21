@@ -493,25 +493,13 @@ ggplot(renov, aes(x=year.built.ren, y=price.ln.ren, fill=year.built.ren)) + geom
   
 ```
 
-Here, we've graphed housing price by yr_renovated itself. These graphs also showcase only 914 properties – the ones that were renovated. Generally speaking, as "yr_renovated" approaches the present day, price increases. Exception is between the 1924-1946 and 1947-1969 intervals; note however, that only `r nrow(kc_house_data[kc_house_data$yr_renovated >0 & kc_house_data$yr_renovated <= "1946", ])` properties occupy the first interval.
+Here, we've graphed housing price by yr_renovated itself. This graph also showcases only 914 properties – the ones that were renovated. Generally speaking, as "yr_renovated" approaches the present day, price increases. The exception is between the 1924-1946 and 1947-1969 intervals; note however, that only `r nrow(kc_house_data[kc_house_data$yr_renovated >0 & kc_house_data$yr_renovated <= "1946", ])` properties occupy the first interval.
 
 ```{r price_by_year_renovated, echo=FALSE}
 
 year.renov.noren <- cut(renov$yr_renovated, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
 ggplot(renov, aes(x=year.renov.noren, y=price.ln.ren, fill=year.renov.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Years Renovated(log)") + ylab("Housing Price ($)") + xlab("Year Renovated") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma)
-
-renov.old <- subset(renov, renov$yr_built < 1950)
-price.ln.renold = log(renov.old$price)
-year.renov.renold <- cut(renov.old$yr_renovated, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
-
-ggplot(renov.old, aes(x=year.renov.renold, y=price.ln.renold, fill=year.renov.renold)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Old Housing Price vs. Years Renovated(log)") + ylab("Housing Price ($)") + xlab("Year Renovated") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
-
-renov.new <- subset(renov, renov$yr_built > 1950)
-price.ln.rennew = log(renov.new$price)
-year.renov.rennew <- cut(renov.new$yr_renovated, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
-
-ggplot(renov.new, aes(x=year.renov.rennew, y=price.ln.rennew, fill=year.renov.rennew)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("New Housing Price vs. Years Renovated(log)") + ylab("Housing Price ($)") + xlab("Year Renovated") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma)
 
 ```
 

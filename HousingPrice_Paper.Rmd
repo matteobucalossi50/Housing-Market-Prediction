@@ -429,7 +429,7 @@ TKcond
 
 Here we have a boxplot comparing "grade" with housing price. Once again, "grade" represents an index from 1 to 13, with the lowest number representing poor construction and design. The trend is clear: construction and design grade correlate positively with housing price.
 
-```{r, echo=FALSE}\
+```{r, echo=FALSE}
 
 ggplot(kc_house_data, aes(x=grade, y=price.ln, fill=grade)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Grade (log)") + ylab("Housing Price ($)") + xlab("Apartment Grade") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
 
@@ -628,7 +628,7 @@ summary(model4)
 vif(model4)
 ```
 
-We dropped the insignificant interactions and some interactions would cause certain variables to be insignificant as well, so we also drop these variables .Here is what's left; this model seems nice. 
+We dropped the insignificant interactions and some interactions would cause certain variables to be insignificant as well, so we also drop these variables. Here is what's left; this model seems nice. 
 
 ```{r digit=9}
 model5<-lm(price~.+bedrooms:sqft_above+sqft_living:sqft_above,data = h4)

@@ -177,11 +177,6 @@ A brief overview of the dataset yields the following observations for housing pr
 
 ```{r price hist, echo=FALSE}
 
-hist(kc_house_data$price, xaxt="n", ylim = c(0,14000), col = "green", main = "Housing Price Histogram", xlab = "Housing Price ($)", cex.axis = .75)
-axis(side=1, at=axTicks(1), 
-     labels=formatC(axTicks(1), format="d", big.mark=','))
-
-
 hist(kc_house_data$price[kc_house_data$price<=2000000], xaxt="n", ylim = c(0,5000), col = heat.colors(20), main = "Housing Price Histogram, $0-$2M Only", xlab = "Housing Price ($)", cex.axis = .75)
 axis(side=1, at=axTicks(1), 
      labels=formatC(axTicks(1), format="d", big.mark=','))

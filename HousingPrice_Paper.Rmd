@@ -329,9 +329,6 @@ Next, let's take a look at the same data in a boxplot. Unfortunately, the visual
 
 ```{r boxplot lot, echo=FALSE}
 
-max(kc_house_data$sqft_lot)
-min(kc_house_data$sqft_lot)
-
 sqft.lot <- cut(kc_house_data$sqft_lot, breaks = c(519,330688,660856,991023,1321191, 1651359), labels = c("520-330K", "330K-660K", "660K-991K", "991K-1.3M", "1.3M-1.65M"))
 
 ggplot(kc_house_data, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
@@ -339,11 +336,9 @@ ggplot(kc_house_data, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() 
 
 ```
 
-The modified boxplot below (with the logarithmic scale) is much easier to interpret. We can see that housing price increases as land area increases, but only to an extent. Note that houses in the 991,000-1.3M sqft and 1.3M-1.65M sqft ranges appear to buck the trend. Once again, this can be explained by the fact that only a few houses are part of these two intervals – only 4 to be exact.
+The modified boxplot below (with the logarithmic scale) is much easier to interpret. We can see that housing price increases as land area increases, but only to an extent. Note that houses in the 991,000-1.3M sqft and 1.3M-1.65M sqft ranges appear to buck the trend. Once again, this can be explained by the fact that only a few houses are part of these two intervals – only `r nrow(kc_house_data[kc_house_data$sqft_lot >= 991000, ])` to be exact.
 
 ```{r boxplot lot log, echo=FALSE}
-
-nrow(kc_house_data[kc_house_data$sqft_lot >= 991000, ])
 
 ggplot(kc_house_data, aes(x=sqft.lot, y=price.ln, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area (log)") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
 
@@ -365,13 +360,9 @@ TKcond
 
 ### Comparison of number of bedrooms with price
 
-Here, we have a logarithmic box plot of housing price vs. "bedrooms". There appears to be a clear trend: as the number of bedrooms increases, housing price increases as well. The 9-11 interval bucks the trend slightly, but again, this can be explained by the fact that only 10 houses are part of this interval, compared with 21,586 total for the others.
+Here, we have a logarithmic box plot of housing price vs. "bedrooms". There appears to be a clear trend: as the number of bedrooms increases, housing price increases as well. The 9-11 interval bucks the trend slightly, but again, this can be explained by the fact that only `r nrow(kc_house_data[kc_house_data$bedrooms >= 9, ])` houses are part of this interval, compared with `r nrow(kc_house_data[kc_house_data$bedrooms <= 8, ])` total for the others.
 
 ```{r, echo=FALSE}
-
-nrow(kc_house_data[kc_house_data$bedrooms >= 9, ])
-
-nrow(kc_house_data[kc_house_data$bedrooms <= 8, ])
 
 number.bedrooms <- cut(kc_house_data$bedrooms, breaks = c(0,3,6,9,11), labels = c("1-2", "3-5", "6-8", "9-11"))
 
@@ -438,9 +429,7 @@ TKcond
 
 Here we have a boxplot comparing "grade" with housing price. Once again, "grade" represents an index from 1 to 13, with the lowest number representing poor construction and design. The trend is clear: construction and design grade correlate positively with housing price.
 
-```{r, echo=FALSE}
-
-ggplot(kc_house_data, aes(x=grade, y=price, fill=grade)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Grade") + ylab("Housing Price ($)") + xlab("Apartment Grade") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+```{r, echo=FALSE}\
 
 ggplot(kc_house_data, aes(x=grade, y=price.ln, fill=grade)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Grade (log)") + ylab("Housing Price ($)") + xlab("Apartment Grade") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
 
@@ -464,13 +453,12 @@ chisq.cond
 
 ## SMART Question
 Are older houses priced differently?
+
 ### Comparison of year they were built with price
 
 Here, we have a comparison of "yr_built" with housing price. Once we take a look at the logarithmic boxplot, we see no obvious trends. Housing price trends downward from 1900-1969, and then picks back up from 1970-2015. What might explain this? Well, "yr_built" does not take "yr_renovated" into account. For instance, two equivalent houses built in the same year could have different house prices, depending on if one has been renovated while the other hasn't.
 
 ```{r, echo=FALSE}
-
-hist(kc_house_data$yr_built, col = heat.colors(12), cex.axis = .75, xlab = "Year Home Built", main = "Histogram of Year Built")
 
 year.built <- cut(kc_house_data$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
@@ -480,7 +468,7 @@ ggplot(kc_house_data, aes(x=year.built, y=price.ln, fill=year.built)) + geom_box
 
 Let's construct the same boxplots, but this time indexed by "yr_renovated".
 
-Unfortunately, the vast majority of properties in this dataset have never been renovated (20,682 to be exact). This means that only 914 properties have been renovated. This makes the resulting boxplots somewhat uninformative – the larger population boxplot (not renovated) largely mirrors the patterns of the previous graph, and the smaller population graph (renovated) is based on a population too small to run meaningful analysis on. We have included the graphs here to showcase our thought process, but we are well aware of their limitations.
+Unfortunately, the vast majority of properties in this dataset have never been renovated (`r nrow(norenov)` to be exact). This means that only 914 properties have been renovated. This makes the resulting boxplots somewhat uninformative – the larger population boxplot (not renovated) largely mirrors the patterns of the previous graph, and the smaller population graph (renovated) is based on a population too small to run meaningful analysis on. We have included the graphs here to showcase our thought process, but we are well aware of their limitations.
 
 ```{r yr_built_by_renovation_status, echo=FALSE}
 
@@ -490,8 +478,6 @@ year.built.noren <- cut(norenov$yr_built, breaks = c(1899,1923,1946,1969,1992,20
 
 ggplot(norenov, aes(x=year.built.noren, y=price.ln.noren, fill=year.built.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Not Renovated Housing Price vs. Years Built(log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
 
-nrow(norenov)
-
 renov <- subset(kc_house_data, kc_house_data$yr_renovated != 0)
 price.ln.ren = log(renov$price)
 year.built.ren <- cut(renov$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
@@ -500,15 +486,13 @@ ggplot(renov, aes(x=year.built.ren, y=price.ln.ren, fill=year.built.ren)) + geom
   
 ```
 
-Here, we've graphed housing price by yr_renovated itself. These graphs also showcase only 914 properties – the ones that were renovated. Generally speaking, as "yr_renovated" approaches the present day, price increases. Expception is between the 1924-1946 and 1947-1969 intervals; note however, that only properties occupy the first interval.
+Here, we've graphed housing price by yr_renovated itself. These graphs also showcase only 914 properties – the ones that were renovated. Generally speaking, as "yr_renovated" approaches the present day, price increases. Exception is between the 1924-1946 and 1947-1969 intervals; note however, that only `r nrow(kc_house_data[kc_house_data$yr_renovated >0 & kc_house_data$yr_renovated <= "1946", ])` properties occupy the first interval.
 
 ```{r price_by_year_renovated, echo=FALSE}
 
 year.renov.noren <- cut(renov$yr_renovated, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
 ggplot(renov, aes(x=year.renov.noren, y=price.ln.ren, fill=year.renov.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Years Renovated(log)") + ylab("Housing Price ($)") + xlab("Year Renovated") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma)
-
-nrow(kc_house_data[kc_house_data$yr_renovated >0 & kc_house_data$yr_renovated <= "1946", ])
 
 renov.old <- subset(renov, renov$yr_built < 1950)
 price.ln.renold = log(renov.old$price)

@@ -588,7 +588,9 @@ What factors influence the house price the most?
 ### LSRL Model building
 
 Below is our regression model, along with a comprehensive correlation plot.
-##First, take a look at all numeric variables and their correlation.
+
+## First, take a look at all numeric variables and their correlation.
+
 ```{r}
 h2 <- subset(kc_house_data,select = c(price,bedrooms,bathrooms,sqft_living,sqft_lot,floors,sqft_above,sqft_basement,yr_built ))
 hcor = cor(h2)
@@ -601,8 +603,8 @@ corrplot(hcor, method = "number", type="upper")
 model1 <- lm(price~.-sqft_lot-yr_built,data=h2)
 summary(model1)
 ```
-##The coefficient of sqft_basement is NA, which indicates it has a problem with the other variables, so we dropped this one.
-##And the p-value is bathroom is too large as unsignificant so we dropped this one as well.
+## The coefficient of sqft_basement is NA, which indicates it has a problem with the other variables, so we dropped this one.
+## And the p-value is bathroom is too large as unsignificant so we dropped this one as well.
 ```{r}
 model2 <- lm(price~.-sqft_lot-yr_built-sqft_basement-bathrooms,data=h2)
 summary(model2)
@@ -621,13 +623,13 @@ model3 <- lm(price~.,data=h3)
 summary(model3)
 vif(model3)
 ```
-####The 5 levels of condition variable are all unsignificant so we can directly drop condition variable. For the grade variable, the higher grade has significant effect on price prediction. In contrast, low grade does not effect price significantly. 
+#### The 5 levels of condition variable are all unsignificant so we can directly drop condition variable. For the grade variable, the higher grade has significant effect on price prediction. In contrast, low grade does not effect price significantly. 
 ```{r}
 model11 <- lm(price~.-condition,data=h3)
 summary(model11)
 vif(model11)
 ```
-####Now, I added the interaction into the model as I want to see if the correlation of variables would affect the price prediction. I firstly put all interactions into them to see what happen.
+#### Now, I added the interaction into the model as I want to see if the correlation of variables would affect the price prediction. I firstly put all interactions into them to see what happen.
 
 ```{r}
 h4<-subset(kc_house_data,select=c(price,bedrooms,sqft_living,sqft_above,floors,grade))
@@ -636,7 +638,7 @@ summary(model4)
 vif(model4)
 ```
 
-####I drop the unsignificant interactions and some interactions would lead variable to be unsignificant as well so I also drop these ones.Here is what left and this model seems nice. 
+#### I drop the unsignificant interactions and some interactions would lead variable to be unsignificant as well so I also drop these ones.Here is what left and this model seems nice. 
 ```{r digit=9}
 model5<-lm(price~.+bedrooms:sqft_above+sqft_living:sqft_above,data = h4)
 summary(model5)

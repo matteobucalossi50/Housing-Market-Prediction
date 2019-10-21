@@ -328,7 +328,7 @@ Next, let's take a look at the same data in a boxplot. Unfortunately, the visual
 
 sqft.lot <- cut(kc_house_data$sqft_lot, breaks = c(519,330688,660856,991023,1321191, 1651359), labels = c("520-330K", "330K-660K", "660K-991K", "991K-1.3M", "1.3M-1.65M"))
 
-ggplot(kc_house_data, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+ggplot(kc_house_data, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) 
 
 
 ```
@@ -337,7 +337,7 @@ The modified boxplot below (with the logarithmic scale) is much easier to interp
 
 ```{r boxplot lot log, echo=FALSE}
 
-ggplot(kc_house_data, aes(x=sqft.lot, y=price.ln, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area (log)") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+ggplot(kc_house_data, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area (log)") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
 
 ```
 
@@ -363,7 +363,7 @@ Here, we have a logarithmic box plot of housing price vs. "bedrooms". There appe
 
 number.bedrooms <- cut(kc_house_data$bedrooms, breaks = c(0,3,6,9,11), labels = c("1-2", "3-5", "6-8", "9-11"))
 
-ggplot(kc_house_data, aes(x=number.bedrooms, y=price.ln, fill=number.bedrooms)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. # Bedrooms (log)") + ylab("Housing Price ($)") + xlab("# Bedrooms") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+ggplot(kc_house_data, aes(x=number.bedrooms, y=price, fill=number.bedrooms)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. # Bedrooms (log)") + ylab("Housing Price ($)") + xlab("# Bedrooms") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
 
 ```
 
@@ -406,7 +406,7 @@ Here, we compare "condition" with housing price. Once again, "condition" represe
 ggplot(kc_house_data, aes(x=condition, y=price, fill=condition)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Condition") + ylab("Housing Price ($)") + xlab("Apartment Condition") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
 
 
-ggplot(kc_house_data, aes(x=condition, y=price.ln, fill=condition)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Condition (log)") + ylab("Housing Price ($)") + xlab("Apartment Condition") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+ggplot(kc_house_data, aes(x=condition, y=price, fill=condition)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Condition (log)") + ylab("Housing Price ($)") + xlab("Apartment Condition") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
 
 ```
 
@@ -428,7 +428,7 @@ Here we have a boxplot comparing "grade" with housing price. Once again, "grade"
 
 ```{r, echo=FALSE}
 
-ggplot(kc_house_data, aes(x=grade, y=price.ln, fill=grade)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Grade (log)") + ylab("Housing Price ($)") + xlab("Apartment Grade") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+ggplot(kc_house_data, aes(x=grade, y=price, fill=grade)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Grade (log)") + ylab("Housing Price ($)") + xlab("Apartment Grade") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
 
 ```
 
@@ -459,7 +459,7 @@ Here, we have a comparison of "yr_built" with housing price. Once we take a look
 
 year.built <- cut(kc_house_data$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
-ggplot(kc_house_data, aes(x=year.built, y=price.ln, fill=year.built)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Year Built (log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+ggplot(kc_house_data, aes(x=year.built, y=price, fill=year.built)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Year Built (log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
 
 ```
 
@@ -481,13 +481,13 @@ norenov <- subset(kc_house_data, kc_house_data$yr_renovated == 0)
 price.ln.noren = log(norenov$price)
 year.built.noren <- cut(norenov$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
-ggplot(norenov, aes(x=year.built.noren, y=price.ln.noren, fill=year.built.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Not Renovated Housing Price vs. Years Built(log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+ggplot(norenov, aes(x=year.built.noren, y=price, fill=year.built.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Not Renovated Housing Price vs. Years Built(log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')) 
 
 renov <- subset(kc_house_data, kc_house_data$yr_renovated != 0)
 price.ln.ren = log(renov$price)
 year.built.ren <- cut(renov$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
-ggplot(renov, aes(x=year.built.ren, y=price.ln.ren, fill=year.built.ren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Renovated Housing Price vs. Years Built(log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+ggplot(renov, aes(x=year.built.ren, y=price, fill=year.built.ren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Renovated Housing Price vs. Years Built(log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
   
 ```
 
@@ -497,7 +497,7 @@ Here, we've graphed housing price by yr_renovated itself. This graph also showca
 
 year.renov.noren <- cut(renov$yr_renovated, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
-ggplot(renov, aes(x=year.renov.noren, y=price.ln.ren, fill=year.renov.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Years Renovated(log)") + ylab("Housing Price ($)") + xlab("Year Renovated") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma)
+ggplot(renov, aes(x=year.renov.noren, y=price, fill=year.renov.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Years Renovated(log)") + ylab("Housing Price ($)") + xlab("Year Renovated") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
 
 ```
 

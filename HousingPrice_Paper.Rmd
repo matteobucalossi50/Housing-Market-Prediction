@@ -169,7 +169,7 @@ house.map
 
 
 # Chapter 3: Slicing the Data for an Overview
-## House Price
+## House Price Distribution
 
 *descibe how price is min max etc, then inline code for price per sqft and how expensive seattle is etc*
 

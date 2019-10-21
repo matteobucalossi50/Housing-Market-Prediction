@@ -236,7 +236,6 @@ hist(kc_house_data$sqft_living[kc_house_data$sqft_living<=6000], col = "yellow",
 ```
 
 ```{r lot hist, echo=FALSE}
-hist(kc_house_data$sqft_lot, col = "yellow", cex.axis = .75, xlab = "Land Area (sqft.)", main = "Histogram of Land Area")
 
 hist(kc_house_data$sqft_lot[kc_house_data$sqft_lot<=25000], xaxt="n", cex.axis = .75, xlab = "Land Area (sqft.)", main = "Histogram of Land Area, up to 25,000 sqft.", col = heat.colors(13))
 axis(side=1, at=axTicks(1), 

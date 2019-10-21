@@ -636,7 +636,7 @@ vif(model5)
 
 ### Final results and approved model for prediction of price
 *explain coefficients and all that - use inline coding etc..*
-###Price = 142000 +bedrooms*(-31710+10.72*sqft_above)+sqft_living*(170+2.943*sqft_above)+sqft_above*(-228.6)+floors*14570+grade()*
+### Price = 142000 +bedrooms*(-31710+10.72*sqft_above)+sqft_living*(170+2.943*sqft_above)+sqft_above*(-228.6)+floors*14570+grade()*
 
 Problem: As the price histogram above is quite left-skewed, it means there are many outliers whose price is very high in the dataset. While we built the model, we did not exclude the outliers as we considered these values important. As a result, our final model is also skewed a bit. It means that for low price houses, our model may predict higher-than-normal prices, but for high price house, our model will predict lower-than-normal prices. 
 

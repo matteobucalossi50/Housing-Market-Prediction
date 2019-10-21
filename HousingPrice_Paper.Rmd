@@ -485,19 +485,40 @@ ggplot(kc_house_data, aes(x=year.built, y=price.ln, fill=year.built)) + geom_box
 
 Let's construct the same boxplots, but this time indexed by "yr_renovated".
 
-```{r, echo=FALSE}
+Unfortunately, the vast majority of properties in this dataset have never been renovated (20,682 to be exact). This means that only 914 properties have been renovated. This makes the resulting boxplots somewhat uninformative – the larger population boxplot largely mirrors the patterns of the previous graph, and the smaller population graph is based on a population too small to run analysis on. We have included the graphs here to showcase our thought process, but we are also well aware of their limitations.
 
-renov <- subset(kc_house_data, kc_house_data$yr_renovated != 0)
-price.ln.ren = log(renov$price)
-year.built.ren <- cut(renov$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
+```{r, echo=FALSE}
 
 norenov <- subset(kc_house_data, kc_house_data$yr_renovated == 0)
 price.ln.noren = log(norenov$price)
 year.built.noren <- cut(norenov$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
+ggplot(norenov, aes(x=year.built.noren, y=price.ln.noren, fill=year.built.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Not Renovated Housing Price vs. Years Built(log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+nrow(norenov)
+
+renov <- subset(kc_house_data, kc_house_data$yr_renovated != 0)
+price.ln.ren = log(renov$price)
+year.built.ren <- cut(renov$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
+
 ggplot(renov, aes(x=year.built.ren, y=price.ln.ren, fill=year.built.ren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Renovated Housing Price vs. Years Built(log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
   
-ggplot(norenov, aes(x=year.built.noren, y=price.ln.noren, fill=year.built.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Not Renovated Housing Price vs. Years Built (log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+year.renov.noren <- cut(renov$yr_renovated, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
+
+ggplot(renov, aes(x=year.renov.noren, y=price.ln.ren, fill=year.renov.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Years Renovated(log)") + ylab("Housing Price ($)") + xlab("Year Renovated") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+renov.old <- subset(renov, renov$yr_built < 1950)
+price.ln.renold = log(renov.old$price)
+year.renov.renold <- cut(renov.old$yr_renovated, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
+
+ggplot(renov.old, aes(x=year.renov.renold, y=price.ln.renold, fill=year.renov.renold)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Old Housing Price vs. Years Renovated(log)") + ylab("Housing Price ($)") + xlab("Year Renovated") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+renov.new <- subset(renov, renov$yr_built > 1950)
+price.ln.rennew = log(renov.new$price)
+year.renov.rennew <- cut(renov.new$yr_renovated, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
+
+ggplot(renov.new, aes(x=year.renov.rennew, y=price.ln.rennew, fill=year.renov.rennew)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("New Housing Price vs. Years Renovated(log)") + ylab("Housing Price ($)") + xlab("Year Renovated") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma)
 
 ```
 

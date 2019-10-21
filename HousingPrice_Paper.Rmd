@@ -271,9 +271,9 @@ Are houses of different sizes priced differently?
 
 Now that we've taken a look at slices of the data, we can now delve deeper with some graphs. Below are scatterplots and boxplots of housing price vs. "sqft_living".
 
-From the scatterplot, it's apparent that there is a relatively strong, positive correlation between housing price and living space (.70192, to be exact). That is, as living space increases, so does housing price. Note that a majority of the data points lie below 6,000 sqft, and below $2 million.
-
 ### Comparison of sqft living with price
+
+From the scatterplot, it's apparent that there is a relatively strong, positive correlation between housing price and living space (.70192, to be exact). That is, as living space increases, so does housing price. Note that a majority of the data points lie below 6,000 sqft, and below $2 million.
 
 ```{r plot sqft living, echo=FALSE}
 
@@ -286,14 +286,10 @@ axis(side=2, at=axTicks(2),
      labels=formatC(axTicks(2), format="d", big.mark=','))
 ```
 
-Now let's take a look at the same data with a boxplot; this time, we have "sqft_living" categorized by 5 intervals. From this visualization as well, it's apparent that "sqft_living" correlates positively with housing price. The last interval (10,891-13,540 sqft) seems to buck this trend, but it worth noting that only 2 houses are part of this group – a small-n population, which could explain the discrepancy.
+Now let's take a look at the same data with a boxplot; this time, we have "sqft_living" categorized by 5 intervals. From this visualization as well, it's apparent that "sqft_living" correlates positively with housing price. The last interval (10,891-13,540 sqft) seems to buck this trend, but it worth noting that only `r nrow(kc_house_data[kc_house_data$sqft_living >= 10891, ])` houses are part of this group – a small-n population, which could explain the discrepancy.
+
 
 ```{r boxplot sqft living, echo=FALSE}
-
-nrow(kc_house_data[kc_house_data$sqft_living >= 10891, ])
-
-max(kc_house_data$sqft_living)
-min(kc_house_data$sqft_living)
 
 sqft.living <- cut(kc_house_data$sqft_living, breaks = c(289,2940,5590,8240,10890,13540), labels = c("290-2,940", "2,941-5,590", "5,591-8,240", "8,241-10,890", "10,891-13,540"))
 

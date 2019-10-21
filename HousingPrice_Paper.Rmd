@@ -53,7 +53,7 @@ This report is organized as follows:
 5. Multiple Linear Regression Model
 6. Conclusion
 
-# Chapter 2: Description Data
+# Chapter 2: Description of the Data
 ## Source Data
 
 *can delete links and explain dataset and variables and all that, as well as what done with cleaning coding (including reasoning for log price, whici will later be more clear with graphs)* 

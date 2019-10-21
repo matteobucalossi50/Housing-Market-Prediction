@@ -365,20 +365,22 @@ bptest(kc_house_data$price~number.bedrooms)
 
 Below is our regression model, along with a comprehensive correlation plot.
 
+##First, take a look at all numeric variables and their correlation.
 ```{r}
 h2 <- subset(kc_house_data,select = c(price,bedrooms,bathrooms,sqft_living,sqft_lot,floors,sqft_above,sqft_basement,yr_built ))
 hcor = cor(h2)
 corrplot(hcor, method = "number", type="upper")
 ```
 
-yr_built and sqft_lot seem unrelated to price.
+##yr_built and sqft_lot seem unrelated to price as their correlation coefficient is almost 0 so I do not chose them as dependent variables to predict the house price.
 
 ```{r}
 model1 <- lm(price~.-sqft_lot-yr_built,data=h2)
 summary(model1)
 ```
 
-The coefficient of sqft_basement is NA, which indicates it has a problem with the other variables, so we dropped this one.
+##The coefficient of sqft_basement is NA, which indicates it has a problem with the other variables, so we dropped this one.
+And the p-value is bathroom is too large as unsignificant so we dropped this one as well.
 
 ```{r}
 model2 <- lm(price~.-sqft_lot-yr_built-sqft_basement-bathrooms,data=h2)
@@ -386,7 +388,8 @@ summary(model2)
 vif(model2)
 ```
 
-Everything looks better now; we then added the two factor variables into the dataset to see their effects.
+##Everything looks better now; I also checked the vif value of each variable and none of them is too large, it shows that there is no problem of multicollineraty. 
+we then added the two factor variables into the dataset to see their effects.
 
 ```{r}
 h3 <- subset(kc_house_data,select = c(price,bedrooms,sqft_living,sqft_above,floors,grade,condition) )
@@ -397,19 +400,27 @@ summary(h3)
 model3 <- lm(price~.,data=h3)
 summary(model3)
 ```
+
+##The 5 levels of condition variable are all unsignificant so we can directly drop condition variable. For the grade variable, the higher grade has significant effect on price prediction. In contrast, low grade does not effect price significantly. 
 ```{r}
 model11 <- lm(price~.-condition,data=h3)
 summary(model11)
 ```
-
-All levels of condition are unsignificant, so we drop the condition variable. And high grade has a significant effect on price.
+##Now, I added the interaction into the model as I want to see if the correlation of variables would affect the price prediction. I firstly put all interactions into them to see what happen.
 
 ```{r}
 h4<-subset(kc_house_data,select=c(price,bedrooms,sqft_living,sqft_above,floors,grade))
 model4<-lm(price~.+bedrooms:sqft_living+bedrooms:floors+bedrooms:sqft_above+sqft_living:floors+sqft_living:sqft_above+floors:sqft_above,data = h4)
 summary(model4)
 ```
+##I drop the unsignificant interactions and some interactions would lead variable to be unsignificant as well so I also drop these ones.Here is what left and this model seems nice. 
+
 ```{r digit=9}
 model5<-lm(price~.+bedrooms:sqft_above+sqft_living:sqft_above,data = h4)
 summary(model5)
 ```
+
+##Price = 142000 +bedrooms*(-31710+10.72*sqft_above)+sqft_living*(170+2.943*sqft_above)+sqft_above*(-228.6)+floors*14570+grade()*
+Here is our final model to predict the house price. 
+##Problem: As the price histogram above is quite left-skewed, it means there are many outliers whose price is very high in the dataset.While I do the model building, I do not exclude the outliers as I think these values are also important. So our final model is also skewed little. It means that for low price hoouse, our model may predict higher price than true value, but for high price house, our model will predict lower than actual one. 
+

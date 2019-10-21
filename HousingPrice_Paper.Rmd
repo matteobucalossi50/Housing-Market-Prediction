@@ -193,19 +193,25 @@ Just for context, the following readouts offer cross sections of Seattle's most 
 
 ### What do the most expensive houses look like?
 
-
+From slicing the data, it looks like the most expensive houses are very well constructed, have tens of thousands of square feet of property, and have 5 or more bedrooms.
 
 ```{r top price, echo=FALSE}
 print(top_n(kc_house_data, 5, price)) %>% arrange(desc(price))
 ```
 
-### what is the average price for each condition level?
+### What is the average price for each condition level?
+
+From the slice below, average prices seem to trend upward along with condition; average prices are in the hundreds of thousands.
+
 ```{r rop avg cond, echo=F}
 print(aggregate(price~condition,data=kc_house_data,FUN=mean))
 
 ```
 
-### what is the average price for each grade level?
+### What is the average price for each grade level?
+
+From the slice below, we can see that price generally trends upward along with grade.
+
 ```{r rop avg grade, echo=F}
 print(aggregate(price~grade,data=kc_house_data,FUN=mean))
 
@@ -481,9 +487,19 @@ Let's construct the same boxplots, but this time indexed by "yr_renovated".
 
 ```{r, echo=FALSE}
 
-year.built <- cut(kc_house_data$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
+renov <- subset(kc_house_data, kc_house_data$yr_renovated != 0)
+price.ln.ren = log(renov$price)
+year.built.ren <- cut(renov$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
-ggplot(kc_house_data, aes(x=year.built, y=price.ln, fill=year.built)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Year Built (log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+norenov <- subset(kc_house_data, kc_house_data$yr_renovated == 0)
+price.ln.noren = log(norenov$price)
+year.built.noren <- cut(norenov$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
+
+ggplot(renov, aes(x=year.built.ren, y=price.ln.ren, fill=year.built.ren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Renovated Housing Price vs. Years Built(log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+  
+ggplot(norenov, aes(x=year.built.noren, y=price.ln.noren, fill=year.built.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Not Renovated Housing Price vs. Years Built (log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+
+```
 
 ```
 

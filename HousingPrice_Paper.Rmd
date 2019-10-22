@@ -58,7 +58,7 @@ This report is organized as follows:
 # Chapter 2: Description of the Data
 ## Source Data
 
-As mentioned previously, our dataset houses 21,613 observations across 21 variables. (See below for a readout of the dataset's structure and variable names.) Variable descriptions are as follows and come from the following link: https://bit.ly/2MsyRFl; astericks next to variable name indicates usage in our analysis:
+As mentioned previously, our dataset houses 21,613 observations across 21 variables. (See below for a readout of the dataset's structure and variable names.) Variable descriptions are as follows and come from the following [link](https://bit.ly/2MsyRFl); astericks next to variable name indicates usage in our analysis:
 
 ```{r, echo=FALSE}
 kc_house_data <- read.csv("kc_house_data.csv")

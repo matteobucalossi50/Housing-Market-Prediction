@@ -280,23 +280,30 @@ ggplot(kc_house_data, aes(x=year.built, y=price.ln, fill=year.built)) + geom_box
 
 Below are chi-square tests on condition, grade, bed, and bath. The results for all four are significant (p is close to 0); the variables have a significant relationship with price.
 
-Chi-square of the condition variable. Significant relationship with price.
+### Chi-square of the condition variable. Significant relationship with price.
 
+H0: The condition and grade are independent.
+H1: The condition and grade are not independent.
 ```{r chisq condition}
 cond.tbl <- table(kc_house_data$condition, kc_house_data$grade)
 chisq.cond <- chisq.test(cond.tbl)
 chisq.cond
 ```
+Since p-value is lower 0.05, we need to reject the null hypothesis. Thus, the condition and grade are not independent. They are corrlated.  
 
-Chi-square of the "year built" variable. Significant relationship with price.
+### Chi-square of the "year built" variable. Significant relationship with price.
+
+H0: The year built and grade are independent.
+H1: The year built and grade are not independent.
 
 ```{r chisq year}
 grade.tbl <- table(kc_house_data$grade, year.built)
 chisq.cond <- chisq.test(grade.tbl)
 chisq.cond
 ```
+Since p-value is lower 0.05, we need to reject the null hypothesis. Thus, the year built and grade are not independent. They are corrlated. 
 
-Chi-square of the bedroom and bathroom variables. Significant relationship with price.
+### Chi-square of the bedroom and bathroom variables. Significant relationship with price.
 
 ```{r chisq bedr}
 price.intrv = cut(kc_house_data$price, c(0, 250000, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000))
@@ -308,13 +315,21 @@ bath_p <- table(number.bathrooms, price.intrv)
 x2test2 = chisq.test(bath_p)
 x2test2
 ```
-
+Since both p-values are lower 0.05, we need to reject the null hypothesis. Thus, the number of bedrooms and the number of bathrooms are not independent from the grade of house. They are corrlated. Generally, the price increases when the number of bedrooms and bathrooms become greater.
 
 ## Anova tests
 
 Below are ANOVA tests on land area, combined with BP tests and post-hoc Tukey tests.
 
-ANOVA, BP, and Tukey tests on land area variable.
+### ANOVA, BP, and Tukey tests on land area variable.
+
+BP test:  
+H0: The variances of prices are the same accross the different sqft of lot levels.  
+H1: The variances of prices are different accross the different sqft of lot levels.  
+
+ANOVA test:  
+H0: There are no differences between the mean prices of the different sqft.lot levels.  
+H1: The mean prices of the different sqft.lot levels are different.  
 
 ```{r anova land}
 bptest(kc_house_data$price~sqft.lot)
@@ -323,8 +338,18 @@ summary(land.anova)
 TKcond <- TukeyHSD(land.anova)
 TKcond
 ```
+Note that the p-value of BP test are 0.996, which is greater than 0.05. Thus, the variances are the same for different groups. Then we use ANOVA test analysis the differences of mean prices. Since the p-value is lower than 0.05, we need to reject the null hypothesis. The mean prices of the different sqft.lot levels are different. From the Turkey test we can see, the p-value of the 660k-991k and 520k-330k, 660k-991k and 330K-660K, 660k-991k and 991K-1.3M are the lowest three. And the p-value for other pairs are very high, which means the means price of 660k-991k(the median level) are higher than others'. Thus the land area of 660k-991k are the most popular level for houses in WA. 
 
-ANOVA, BP, and Tukey tests on condition variable.
+
+### ANOVA, BP, and Tukey tests on condition variable.
+
+BP test:  
+H0: The variances of prices are the same accross different condition.  
+H1: The variances of prices are different accross different condition.  
+
+ANOVA test:  
+H0: There are no differences between the mean prices of the different condition.  
+H1: The mean prices of the different condition are different.  
 
 ```{r anova condition}
 bptest(price~condition, data = kc_house_data)
@@ -333,30 +358,49 @@ summary(cond.anova)
 TKcond <- TukeyHSD(cond.anova)
 TKcond
 ```
+Note that the p-value of BP test are 0.2923, which is greater than 0.05. Thus, the variances are the same for different condition groups. Then we use ANOVA test analysis the differences of mean prices. Since the p-value is lower than 0.05, we need to reject the null hypothesis. The mean prices of the different condition are different. From the Tukey test we know, the condition 1 and 2 has a very large p-value. Other p-values are very low. Basically, the price increases when the condition is better.   
 
-ANOVA, BP, and Tukey tests on the living space variable.
+
+### ANOVA, BP, and Tukey tests on the living space variable.
+
+H0: The variances of prices are the same accross the different sqft of living levels.  
+H1: The variances of prices are different accross the different sqft of living levels.  
 
 ```{r anova living}
 bptest(kc_house_data$price~sqft.living)
 ```
+Since the p-value is lower than 0.05, we need to reject the null hypothesis. The variances for different sqft of living levels are different. Thus, the ANOVA test is not applicable.  
 
-ANOVA, BP, and Tukey tests on "year built" variable.
+### ANOVA, BP, and Tukey tests on "year built" variable.
+
+H0: The variances of prices are the same accross the different year of built.  
+H1: The variances of prices are different accross the different year of built.  
 
 ```{r anova year}
 bptest(kc_house_data$price~year.built)
 ```
+Since the p-value is lower than 0.05, we need to reject the null hypothesis. The variances for different year built groups are different. Thus, the ANOVA test is not applicable.  
 
-ANOVA, BP, and Tukey tests on "construction grade" variable.
+
+### ANOVA, BP, and Tukey tests on "construction grade" variable.
+
+H0: The variances of prices are the same accross the different grade.  
+H1: The variances of prices are different accross the different grade.  
 
 ```{r anova grade}
 bptest(price~grade, data = kc_house_data)
 ```
+Since the p-value is lower than 0.05, we need to reject the null hypothesis. The variances for different grades are different. Thus, the ANOVA test is not applicable.  
 
-ANOVA, BP, and Tukey tests on "number of bedrooms" variable.
+### ANOVA, BP, and Tukey tests on "number of bedrooms" variable.
+
+H0: The variances of prices are the same accross the different number of bedrooms groups.  
+H1: The variances of prices are different accross the different number of bedrooms groups.    
 
 ```{r anova bedrooms}
 bptest(kc_house_data$price~number.bedrooms)
 ```
+Since the p-value is lower than 0.05, we need to reject the null hypothesis. The variances for different number of bedrooms groups are different. Thus, the ANOVA test is not applicable.  
 
 # LSRL
 

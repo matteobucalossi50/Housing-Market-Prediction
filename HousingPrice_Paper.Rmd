@@ -3,15 +3,16 @@ title: "Housing Market - Seattle Area"
 author: "Anti-Code Group"
 date: "10/5/2019"
 output:  
-  html_document:
-    toc: true
-    toc_float: true
-    number_sections: true
+    rmdformats::readthedown:
+      toc_float: true
+      number_sections: true
+      includes:
+        before_body: header.html
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-options(scipen = 999, digits = 3, big.mark=",")
+options(scipen = 999, digits = 3, big.mark=",", warn = -1)
 ```
 
 ```{r basicfunct, include=FALSE}
@@ -36,13 +37,16 @@ loadPkg('lmtest')
 loadPkg("faraway")
 loadPkg("corrplot")
 loadPkg("modelr")
+loadPkg('DT')
+loadPkg('plotly')
+loadPkg('rmdformats')
 ```
 
 # Chapter 1: Introduction
 
 *insert intro here: why this dataset, background research on topic and data, what this data and report about, table of contents description*
 
-Seattle boasts among the "hottest" housing markets in the United States; as of July 2018, Seattle "led the nation in home price gains" for 21 straight months, topped only by Portland in the 1990s – a trend driven by the city's tech sector and a  lack of supply compared with demand (https://bit.ly/2v5UMcn). Given the Seattle housing market's notoriety for high prices, we were interested in exploring which variables affect housing price in this market. With this goal in mind, we found a public dataset on Kaggle ("House Sales in King County, USA") offering 21,613 observations across 21 variables. According to Kaggle, it "includes homes sold between May 2014 and May 2015." Although it doesn't explore macro-level variables affecting housing price (such as the local job market, Amazon presence, etc.), it does focus on micro-level variables, such as renovations, number of bedrooms, square feet of living space, etc. that are common to virtually all housing markets in the United States. As a result, our analysis could lay the groundwork for future comparative analysis with other housing markets across the country.
+Seattle boasts among the "hottest" housing markets in the United States; as of [July 2018] (https://bit.ly/2v5UMcn), Seattle "led the nation in home price gains" for 21 straight months, topped only by Portland in the 1990s – a trend driven by the city's tech sector and a  lack of supply compared with demand. Given the Seattle housing market's notoriety for high prices, we were interested in exploring which variables affect housing price in this market. With this goal in mind, we found a public dataset on Kaggle ("House Sales in King County, USA") offering 21,613 observations across 21 variables. According to Kaggle, it "includes homes sold between May 2014 and May 2015." Although it doesn't explore macro-level variables affecting housing price (such as the local job market, Amazon presence, etc.), it does focus on micro-level variables, such as renovations, number of bedrooms, square feet of living space, etc. that are common to virtually all housing markets in the United States. As a result, our analysis could lay the groundwork for future comparative analysis with other housing markets across the country.
 
 This report is organized as follows:
 
@@ -174,7 +178,7 @@ A brief overview of the dataset yields the following observations for housing pr
 
 ```{r price hist, echo=FALSE}
 
-hist(kc_house_data$price, xaxt="n", ylim = c(0,14000), col = "green", main = "Housing Price Histogram", xlab = "Housing Price ($)", cex.axis = .75)
+hist(kc_house_data$price, xaxt="n", ylim = c(0,14000), col = "green3", main = "Housing Price Histogram", xlab = "Housing Price ($)", cex.axis = .75)
 axis(side=1, at=axTicks(1), 
      labels=formatC(axTicks(1), format="d", big.mark=','))
 
@@ -193,7 +197,8 @@ Just for context, the following readouts offer cross sections of Seattle's most 
 From slicing the data, it looks like the most expensive houses are very well constructed, have tens of thousands of square feet of property, and have 5 or more bedrooms.
 
 ```{r top price, echo=FALSE}
-top_n(kc_house_data, 5, price) %>% arrange(desc(price))
+top1 <- top_n(kc_house_data, 5, price) %>% arrange(desc(price))
+datatable(top1, rownames = FALSE, options = list(pageLength = 5, scrollX=T))
 ```
 
 ### What is the average price for each condition level?
@@ -247,24 +252,27 @@ Going into this project, we hypothesized that larger houses would be priced high
 It is apparent here that the largest houses are also among the most expensive – they are all priced in the millions of dollars, which are outliers when compared to the dataset as a whole.
 
 ```{r top sqftliv, echo=FALSE}
-top_n(kc_house_data, 5, sqft_living) %>% arrange(desc(sqft_living))
+top2 <- top_n(kc_house_data, 5, sqft_living) %>% arrange(desc(sqft_living))
+datatable(top2, rownames = FALSE, options = list(pageLength = 5, scrollX=T))
+
 ```
 
 The properties with the largest amount of land are also priced highly, but not as highly as those listed in the "sqft_living" readout. This could suggest a lower correlation between housing price and sqft_lot than that between housing price and sqft_living.
 
 ```{r top sqftlot, echo=FALSE}
-top_n(kc_house_data, 5, sqft_lot) %>% arrange(desc(sqft_lot))
+top3 <- top_n(kc_house_data, 5, sqft_lot) %>% arrange(desc(sqft_lot))
+datatable(top3, rownames = FALSE, options = list(pageLength = 5, scrollX=T))
 ```
 The properties with the largest number of bedrooms are also priced highly (around or above the dataset mean of $540,000), but not quite as highly as those in the "sqft_living" readout. Since "bedrooms" contributes in part – but not in whole – to sqft_living, it makes sense that its correlation with housing price is lower than that of sqft_living.
 
 ```{r top bedrooms, echo=FALSE}
-top_n(kc_house_data, 4, bedrooms) %>% arrange(desc(bedrooms))
+top4 <- top_n(kc_house_data, 4, bedrooms) %>% arrange(desc(bedrooms))
+datatable(top4, rownames = FALSE, options = list(pageLength = 5, scrollX=T))
 ```
 
 
 # Chapter 4: Independent Variables EDA: Boxplots, Scatterplots, ANOVA, & Chi-Square
-## SMART Question
-**Are houses of different sizes priced differently?**
+## SMART Question: **Are houses of different sizes priced differently?**
 
 Now that we've taken a look at slices of the data, we can now delve deeper with some graphs. Below are scatterplots and boxplots of housing price vs. "sqft_living".
 
@@ -290,8 +298,8 @@ Now let's take a look at the same data with a boxplot; this time, we have "sqft_
 
 sqft.living <- cut(kc_house_data$sqft_living, breaks = c(289,2940,5590,8240,10890,13540), labels = c("290-2,940", "2,941-5,590", "5,591-8,240", "8,241-10,890", "10,891-13,540"))
 
+ggplotly(ggplotly(ggplot(kc_house_data, aes(x=sqft.living, y=price, fill=sqft.living)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Living Space") + ylab("Housing Price ($)") + xlab("Square Feet of Living Space") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma)))
 
-ggplot(kc_house_data, aes(x=sqft.living, y=price, fill=sqft.living)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Living Space") + ylab("Housing Price ($)") + xlab("Square Feet of Living Space") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
 
 ```
 *explains bp test with inline code and not possible anova*
@@ -331,8 +339,7 @@ Next, let's take a look at the same data in a boxplot. Unfortunately, the visual
 
 sqft.lot <- cut(kc_house_data$sqft_lot, breaks = c(519,330688,660856,991023,1321191, 1651359), labels = c("520-330K", "330K-660K", "660K-991K", "991K-1.3M", "1.3M-1.65M"))
 
-ggplot(kc_house_data, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) 
-
+ggplotly(ggplot(kc_house_data, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)))
 
 ```
 
@@ -340,7 +347,7 @@ The modified boxplot below (with the logarithmic scale) is much easier to interp
 
 ```{r boxplot lot log, echo=FALSE}
 
-ggplot(kc_house_data, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area (log)") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
+ggplotly(ggplot(kc_house_data, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area (log)") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')))
 
 ```
 *explain results of anova inline code etc*
@@ -362,7 +369,7 @@ summary(land.anova)
 TKcond <- TukeyHSD(land.anova)
 TKcond
 ```
-Note that the p-value of BP test are `lot_p$p.value`, which is greater than 0.05. Thus, the variances are the same for different groups. Then we use ANOVA test analysis the differences of mean prices. Since the p-value is `r land.anova` which is lower than 0.05, we need to reject the null hypothesis. The mean prices of the different sqft.lot levels are different. From the Turkey test we can see, the p-value of the 660k-991k and 520k-330k, 660k-991k and 330K-660K, 660k-991k and 991K-1.3M are the lowest three. And the p-value for other pairs are very high, which means the means price of 660k-991k(the median level) are higher than others'. Thus the land area of 660k-991k are the most popular level for houses in WA. 
+Note that the p-value of BP test are `r lot_p$p.value`, which is greater than 0.05. Thus, the variances are the same for different groups. Then we use ANOVA test analysis the differences of mean prices. Since the p-value is `r land.anova$p.value` which is lower than 0.05, we need to reject the null hypothesis. The mean prices of the different sqft.lot levels are different. From the Turkey test we can see, the p-value of the 660k-991k and 520k-330k, 660k-991k and 330K-660K, 660k-991k and 991K-1.3M are the lowest three. And the p-value for other pairs are very high, which means the means price of 660k-991k(the median level) are higher than others'. Thus the land area of 660k-991k are the most popular level for houses in WA. 
 
 
 ### Comparison of number of bedrooms with price
@@ -373,7 +380,7 @@ Here, we have a logarithmic box plot of housing price vs. "bedrooms". There appe
 
 number.bedrooms <- cut(kc_house_data$bedrooms, breaks = c(0,3,6,9,11), labels = c("1-2", "3-5", "6-8", "9-11"))
 
-ggplot(kc_house_data, aes(x=number.bedrooms, y=price, fill=number.bedrooms)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. # Bedrooms (log)") + ylab("Housing Price ($)") + xlab("# Bedrooms") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
+ggplotly(ggplot(kc_house_data, aes(x=number.bedrooms, y=price, fill=number.bedrooms)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. # Bedrooms (log)") + ylab("Housing Price ($)") + xlab("# Bedrooms") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')))
 
 ```
 *same for anova bedrooms*
@@ -412,20 +419,18 @@ x2test2
 Since both p-values are lower 0.05, we need to reject the null hypothesis. Thus, the number of bedrooms and the number of bathrooms are not independent from the price of house. They are corrlated. Generally, the price increases when the number of bedrooms and bathrooms become greater.
 
 
-## SMART Question
-**Are houses of different quality priced differently?** *check all these questions make sense given what nick said*
+## SMART Question: **Are houses of different quality priced differently?** *check all these questions make sense given what nick said*
 
 ### Comparison of condition with price
 **explain well this variable, what represents etc as they asked*
 
 Here, we compare "condition" with housing price. Once again, "condition" represents an index from 1 to 5, with the lowest number representing poor condition. Once we take a look at the boxplot below (the second one is logarithmized for clearer visualization), it becomes clear that apartment condition correlates positively with housing price. 
 
-```{r, echo=FALSE}
+```{r cond price, echo=FALSE}
 
-ggplot(kc_house_data, aes(x=condition, y=price, fill=condition)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Condition") + ylab("Housing Price ($)") + xlab("Apartment Condition") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) 
+ggplotly(ggplot(kc_house_data, aes(x=condition, y=price, fill=condition)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Condition") + ylab("Housing Price ($)") + xlab("Apartment Condition") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma))
 
-
-ggplot(kc_house_data, aes(x=condition, y=price, fill=condition)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Condition (log)") + ylab("Housing Price ($)") + xlab("Apartment Condition") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
+ggplotly(ggplot(kc_house_data, aes(x=condition, y=price, fill=condition)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Condition (log)") + ylab("Housing Price ($)") + xlab("Apartment Condition") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')))
 
 ```
 
@@ -463,7 +468,7 @@ Here we have a boxplot comparing "grade" with housing price. Once again, "grade"
 
 ```{r, echo=FALSE}
 
-ggplot(kc_house_data, aes(x=grade, y=price, fill=grade)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Grade (log)") + ylab("Housing Price ($)") + xlab("Apartment Grade") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
+ggplotly(ggplot(kc_house_data, aes(x=grade, y=price, fill=grade)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Grade (log)") + ylab("Housing Price ($)") + xlab("Apartment Grade") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')))
 
 ```
 
@@ -492,8 +497,7 @@ chisq.cond
 ```
 Since the p-value is `r chisq.cond$p.value`, which is lower than 0.05. We need to reject the null hypothesis. Thus, the condition and grade are not independent. They are corrlated. Gerenally,  the grade is better when the condition is better.
 
-## SMART Question
-**Are older houses priced differently?**
+## SMART Question: **Are older houses priced differently?**
 
 ### Comparison of year they were built with price
 
@@ -503,7 +507,7 @@ Here, we have a comparison of "yr_built" with housing price. Once we take a look
 
 year.built <- cut(kc_house_data$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
-ggplot(kc_house_data, aes(x=year.built, y=price, fill=year.built)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Year Built (log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
+ggplotly(ggplot(kc_house_data, aes(x=year.built, y=price, fill=year.built)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Year Built (log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_continuous(labels = comma) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')))
 
 ```
 
@@ -525,13 +529,13 @@ norenov <- subset(kc_house_data, kc_house_data$yr_renovated == 0)
 price.ln.noren = log(norenov$price)
 year.built.noren <- cut(norenov$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
-ggplot(norenov, aes(x=year.built.noren, y=price, fill=year.built.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Not Renovated Housing Price vs. Years Built(log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')) 
+ggplotly(ggplot(norenov, aes(x=year.built.noren, y=price, fill=year.built.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Not Renovated Housing Price vs. Years Built(log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')))
 
 renov <- subset(kc_house_data, kc_house_data$yr_renovated != 0)
 price.ln.ren = log(renov$price)
 year.built.ren <- cut(renov$yr_built, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
-ggplot(renov, aes(x=year.built.ren, y=price, fill=year.built.ren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Renovated Housing Price vs. Years Built(log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
+ggplotly(ggplot(renov, aes(x=year.built.ren, y=price, fill=year.built.ren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Renovated Housing Price vs. Years Built(log)") + ylab("Housing Price ($)") + xlab("Year Built") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')))
   
 ```
 
@@ -541,7 +545,7 @@ Here, we've graphed housing price by yr_renovated itself. This graph also showca
 
 year.renov.noren <- cut(renov$yr_renovated, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 
-ggplot(renov, aes(x=year.renov.noren, y=price, fill=year.renov.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Years Renovated(log)") + ylab("Housing Price ($)") + xlab("Year Renovated") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ','))
+ggplotly(ggplot(renov, aes(x=year.renov.noren, y=price, fill=year.renov.noren)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Years Renovated(log)") + ylab("Housing Price ($)") + xlab("Year Renovated") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')))
 
 ```
 
@@ -579,8 +583,7 @@ Since the p-value is `r yr_R.anova$p.value`, which is less than 0.05. We need to
 
 **compared renovated with built and see price changes too..**
 
-## SMART Question
-**Is quality affected by house age?**
+## SMART Question: **Is quality affected by house age?**
 
 ### Chi-square test for year they were built and grade
 *use chisq to assess old and quality independence*
@@ -595,9 +598,8 @@ H1: The grade and year of built are in not independent.
 gradey.tbl <- table(kc_house_data$grade, year.built)
 chisq.gradey <- chisq.test(gradey.tbl)
 chisq.gradey
-plot(kc_house_data$grade, year.built)
 ```
-Since p-value is `r chisq.gradey`, which is lower 0.05, we need to reject the null hypothesis. Thus, the year built and grade are not independent. They are corrlated.  
+Since p-value is `r chisq.gradey$p.value`, which is lower 0.05, we need to reject the null hypothesis. Thus, the year built and grade are not independent. They are corrlated.  
 
 #### Chi-square test for condition and year of built.
 
@@ -608,9 +610,8 @@ H1: The condition and year of built are not independent.
 condy.tbl <- table(kc_house_data$condition, year.built)
 chisq.condy <- chisq.test(condy.tbl)
 chisq.condy
-plot(kc_house_data$condition, year.built)
 ```
-Since p-value is `r chisq.condy`, which is lower 0.05, we need to reject the null hypothesis. Thus, the year built and grade are not independent. They are corrlated.  
+Since p-value is `r chisq.condy$p.value`, which is lower 0.05, we need to reject the null hypothesis. Thus, the year built and grade are not independent. They are corrlated.  
 
 ### Does quality get better when renovated?
 *use chisq to assess renovated and quality indep - replicate above chisq tests for year.renov*
@@ -624,9 +625,8 @@ H1: The condition and year of renovated are not independent.
 condy.tbl <- table(kc_house_data$condition, kc_house_data$yr_renovated)
 chisq.renov <- chisq.test(condy.tbl)
 chisq.renov
-plot(kc_house_data$condition, kc_house_data$yr_renovated)
 ```
-Since p-value is `r chisq.renov`, which is lower 0.05, we need to reject the null hypothesis. Thus, the year built and grade are not independent. They are corrlated.  
+Since p-value is `r chisq.renov$p.value`, which is lower 0.05, we need to reject the null hypothesis. Thus, the year built and grade are not independent. They are corrlated.  
 
 **subset for older houses with renovation and rerun both tests and see difference in time**
 
@@ -636,8 +636,7 @@ like they wanted us to go in depth of that cause it actually makes sense
 
 # Chapter 5: Multiple Linear Regression Model
 
-## SMART Question:
-What factors influence the house price the most?
+## SMART Question: What factors influence the house price the most?
 
 ### LSRL Model building
 
@@ -713,6 +712,8 @@ Problem: As the price histogram above is quite left-skewed, it means there are m
 # Chapter 6: Conclusion
 *final insights, main relationships, predictors, what to look in a real estate dataset etc..*
 *future openings for further studies, analysis, tests etc on this..*
+
+In conclusion, this analysis provided many insights into the dynamics of the housing market in the Seattle area. After conducting EDA on most of the variables in the dataset and considered possible interactions among them, we were able to narrow down better questions to assess what could actually cause price fluctuations for houses in the area. 
 
 
 # Bibliography

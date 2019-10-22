@@ -58,8 +58,6 @@ This report is organized as follows:
 # Chapter 2: Description of the Data
 ## Source Data
 
-*can delete links and explain dataset and variables and all that, as well as what done with cleaning coding (including reasoning for log price, whici will later be more clear with graphs)* 
-
 As mentioned previously, our dataset houses 21,613 observations across 21 variables. (See below for a readout of the dataset's structure and variable names.) Variable descriptions are as follows and come from the following link: https://bit.ly/2MsyRFl; astericks next to variable name indicates usage in our analysis:
 
 ```{r, echo=FALSE}
@@ -160,7 +158,6 @@ house.map2
 # Chapter 3: Independent Variables EDA: Slicing the Data for an Overview
 ## House Price Distribution
 
-*descibe how price is min max etc, then inline code for price per sqft and how expensive seattle is etc*
 ```{r, include=FALSE}
 summary(kc_house_data$price)
 
@@ -172,7 +169,7 @@ print(var(kc_house_data$price))
 
 ```
 
-A brief overview of the dataset yields the following observations for housing price: the minimum price is \$78,000, while the maximum is \$7,700,000 (quite a large range); the mean of the dataset is \$540,198 (indicating that the dataset is right-skewed, as further indicated by the histogram below); the standard deviation of the dataset is \$ 367,142; and the variance is 134,792,956,735 (quite large, indicating ["that the data points are very spread out from the mean, and from one another"](https://bit.ly/2MZ1cCn).
+A brief overview of the dataset yields the following observations for housing price: the minimum price is \$78,000, while the maximum is \$7,700,000 (quite a large range); the mean of the dataset is \$540,198 (indicating that the dataset is right-skewed, as further indicated by the histogram below); the standard deviation of the dataset is \$367,142; and the variance is 134,792,956,735 (quite large, indicating ["that the data points are very spread out from the mean, and from one another"](https://bit.ly/2MZ1cCn).
 
 ```{r price hist, echo=FALSE}
 
@@ -214,8 +211,6 @@ print(aggregate(price~grade,data=kc_house_data,FUN=mean))
 
 ## House Size
 
-*add histograms for bedroom variable and sqft living variable - comment on them, why such house be that in real world etc etc..*
-
 Below we have included histograms for "bedrooms", "sqft_living", and "sqft_lot". Upon inspecting the graphs, it becomes clear that most of the properties in this dataset have around 3 bedrooms, while the majority of properties are around 1000-2000 square feet (for reference, in 2015, the average [US house size](https://bit.ly/32zY9Hi) was around 2,600 square feet); as for sqft_lot, most of the properties have between 5,000 and 10,000 square feet of land. As with the housing price histogram shown earlier, these histograms are right-skewed.
 
 ```{r bedroom hist, echo=FALSE}
@@ -238,7 +233,6 @@ axis(side=1, at=axTicks(1),
 ```
 
 ### What do the largest houses look like?
-*introduce the reasoning of this passage and thendescribe each output with reason under each of them*
 
 Going into this project, we hypothesized that larger houses would be priced higher than smaller houses. House size is determined in large part by "sqft_living", of which "bathrooms" and "bedrooms" are a part.
 
@@ -295,15 +289,15 @@ ggplotly(ggplotly(ggplot(kc_house_data, aes(x=sqft.living, y=price, fill=sqft.li
 
 
 ```
-*explains bp test with inline code and not possible anova*
+
 BP Test
-H0: The variances of prices are the same accross the different sqft of living levels.  
-H1: The variances of prices are different accross the different sqft of living levels.  
+H0: The variances of prices are the same across the different sqft_living levels.  
+H1: The variances of prices are different across the different sqft_living levels.  
 ```{r anova living, include=FALSE}
 date_p <- bptest(kc_house_data$price~sqft.living)
 date_p$p.value
 ```
-Since the p-value is `r date_p$p.value` which is lower than 0.05, we need to reject the null hypothesis. The variances for different sqft of living levels are different. Thus, the ANOVA test is not applicable.  
+Since the p-value is `r date_p$p.value`, which is lower than 0.05, we need to reject the null hypothesis. The variances for different sqft_living levels are different. Thus, the ANOVA test is not applicable.  
 
 ### Comparison of sqft lot with price
 
@@ -343,10 +337,9 @@ The modified boxplot below (with the logarithmic scale) is much easier to interp
 ggplotly(ggplot(kc_house_data, aes(x=sqft.lot, y=price, fill=sqft.lot)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Land Area (log)") + ylab("Housing Price ($)") + xlab("Land Area (sqft.)") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')))
 
 ```
-*explain results of anova inline code etc*
 BP test:  
-H0: The variances of prices are the same accross the different sqft of lot levels.  
-H1: The variances of prices are different accross the different sqft of lot levels.  
+H0: The variances of prices are the same across the different sqft_lot levels.  
+H1: The variances of prices are different across the different sqft_lot levels.  
 
 ANOVA test:  
 H0: There are no differences between the mean prices of the different sqft.lot levels.  
@@ -362,7 +355,7 @@ summary(land.anova)
 TKcond <- TukeyHSD(land.anova)
 TKcond
 ```
-Note that the p-value of BP test are `r lot_p$p.value`, which is greater than 0.05. Thus, the variances are the same for different groups. Then we use ANOVA test analysis the differences of mean prices. Since the p-value is `r land.anova$p.value` which is lower than 0.05, we need to reject the null hypothesis. The mean prices of the different sqft.lot levels are different. From the Turkey test we can see, the p-value of the 660k-991k and 520k-330k, 660k-991k and 330K-660K, 660k-991k and 991K-1.3M are the lowest three. And the p-value for other pairs are very high, which means the means price of 660k-991k(the median level) are higher than others'. Thus the land area of 660k-991k are the most popular level for houses in WA. 
+Note that the p-value of BP test are `r lot_p$p.value`, which is greater than 0.05. Thus, the variances are the same for different groups. Then we use the ANOVA test to analyze the differences of mean prices. Since the p-value is `r land.anova$p.value`, which is lower than 0.05, we need to reject the null hypothesis. The mean prices of the different sqft.lot levels are different. From the Turkey test, we can see that the p-values for the following pairs are the lowest: the 660k-991k and 520k-330k, 660k-991k and 330K-660K, 660k-991k and 991K-1.3M. And the p-value for other pairs are very high, which means the mean price of 660k-991k(the median level) are higher than others'. Thus, the land area of 660k-991k are the most popular level for houses in WA. 
 
 
 ### Comparison of number of bedrooms with price
@@ -376,20 +369,18 @@ number.bedrooms <- cut(kc_house_data$bedrooms, breaks = c(0,3,6,9,11), labels = 
 ggplotly(ggplot(kc_house_data, aes(x=number.bedrooms, y=price, fill=number.bedrooms)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. # Bedrooms (log)") + ylab("Housing Price ($)") + xlab("# Bedrooms") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')))
 
 ```
-*same for anova bedrooms*
-Then we do BP Test to see the homoscedasticity of the different groups.
+Next, we perform the BP Test to determine the homoscedasticity of the different groups.
 
-H0: The variances of prices are the same accross the different number of bedrooms groups.  
-H1: The variances of prices are different accross the different number of bedrooms groups.    
+H0: Price variance is the same across bedroom groups.  
+H1: Price variance is different across bedroom groups.    
 
 ```{r anova bedrooms}
 bed_p <- bptest(kc_house_data$price~number.bedrooms)
 bed_p
 ```
-Since the p-value is `r bed_p$p.value` which is lower than 0.05, we need to reject the null hypothesis. The variances for different number of bedrooms groups are different. Thus, the ANOVA test is not applicable.  
+Since the p-value is `r bed_p$p.value`, which is lower than 0.05, we need to reject the null hypothesis. The variances for different bedroom groups are different. Thus, the ANOVA test is not applicable.  
 
-*can use chisq to see if more rooms more cost - smart question to intro, explain chisq (hypothesis, categ tranformation, results etc*
-Since the anova test is not applicable, we want to use chi-square test to see the corrleation between the number of bedrooms and the house price. The prices and number of bathrooms are divided into different groups by the cut function to make it categorical so that we can do chi-square test for them.
+Since the anova test is not applicable, we want to use chi-square test to see the corrleation between the number of bedrooms and house price. The prices and number of bathrooms are divided into different groups by the cut function to make it categorical, so we can perform the chi-square test on them.
 
 H0: The price and number of bedrooms are independent.  
 H1: The price and number of bedrooms are not independent.  
@@ -409,13 +400,12 @@ x2test2 = chisq.test(bath_p)
 x2test2
 
 ```
-Since both p-values are lower 0.05, we need to reject the null hypothesis. Thus, the number of bedrooms and the number of bathrooms are not independent from the price of house. They are corrlated. Generally, the price increases when the number of bedrooms and bathrooms become greater.
+Since both p-values are lower than 0.05, we need to reject the null hypothesis. Thus, the number of bedrooms and the number of bathrooms are not independent from the price of house. They are correlated. Generally, the price increases when the number of bedrooms and bathrooms become greater.
 
 
-## SMART Question: **Are houses of different quality priced differently?** *check all these questions make sense given what nick said*
+## SMART Question: **Are houses of different quality priced differently?**
 
 ### Comparison of condition with price
-**explain well this variable, what represents etc as they asked*
 
 Here, we compare "condition" with housing price. Once again, "condition" represents an index from 1 to 5, with the lowest number representing poor condition. Once we take a look at the boxplot below (the second one is logarithmized for clearer visualization), it becomes clear that apartment condition correlates positively with housing price. 
 
@@ -427,24 +417,23 @@ ggplotly(ggplot(kc_house_data, aes(x=condition, y=price, fill=condition)) + geom
 
 ```
 
-*explains anova test tukey and all*
 Then we do the BP test to see the homoscedasticity for different condition groups.
 
 BP test:  
-H0: The variances of prices are the same accross different condition.  
-H1: The variances of prices are different accross different condition.  
+H0: Price variance is the same accross different conditions.  
+H1: Price variance is different accross different conditions.  
 
 ```{r bp condition}
 cp <- bptest(price~condition, data = kc_house_data)
 cp
 ```
-Since the p-value is `r cp$p.value`, which is greater than 0.05. We failed to reject the null hypothesis. The variances of price between different condition group are the same. The ANOVA test is applicable.
+Since the p-value is `r cp$p.value`, which is greater than 0.05, we failed to reject the null hypothesis. The price variance between different condition groups is the same. The ANOVA test is applicable.
 
 Next we do the ANOVA test to see the mean prices of houses with different condition.
 
 ANOVA test:  
-H0: There are no differences between the mean prices of the different condition.  
-H1: The mean prices of the different condition are different.  
+H0: There are no differences between the mean prices of different conditions.  
+H1: The mean prices of the different conditions are not equal.  
 ```{r anova condition}
 cond.anova <- aov(kc_house_data$price~kc_house_data$condition)
 summary(cond.anova)
@@ -452,10 +441,9 @@ summary(cond.anova)
 TKcond <- TukeyHSD(cond.anova)
 TKcond
 ```
-Since the p-value is `r cond.anova$p.value`, which is lower than 0.05. We need to reject the null hypothesis. The mean prices of the different condition are different. From the Tukey test we know, the condition 1 and 2 has a very large p-value. Other p-values are very low. Basically, the price increases when the condition is better.  
+Since the p-value is `r cond.anova$p.value`, which is lower than 0.05, we need to reject the null hypothesis. The mean prices of the different conditions are not equal. From the Tukey test we know that conditions 1 and 2 have very large p-values. Other p-values are very low. Basically, the price increases when the condition is better.  
 
 ### Comparison of grade with price 
-*explain well this variable, what represents etc as they asked, design/construction*
 
 Here we have a boxplot comparing "grade" with housing price. Once again, "grade" represents an index from 1 to 13, with the lowest number representing poor construction and design. The trend is clear: construction and design grade correlate positively with housing price.
 
@@ -465,22 +453,19 @@ ggplotly(ggplot(kc_house_data, aes(x=grade, y=price, fill=grade)) + geom_boxplot
 
 ```
 
-*no anova..*
 Then we do BP test to see if the ANOVA test is applicable.
 
-H0: The variances of prices are the same accross the different grade.  
-H1: The variances of prices are different accross the different grade.  
+H0: The variances of prices are the same across different grades.  
+H1: The variances of prices are not eqal across different grades.  
 
 ```{r anova grade, include=FALSE}
 gp <- bptest(price~grade, data = kc_house_data)
 gp
 ```
-Since the p-value is `r gp$p.value`, which is lower than 0.05, we need to reject the null hypothesis. The variances of prices for different grades are different. Thus, the ANOVA test is not applicable.  
+Since the p-value is `r gp$p.value`, which is lower than 0.05, we need to reject the null hypothesis. The price variance for different grades are not equal. Thus, the ANOVA test is not applicable.  
  
 
-
-*explains chi-sq results and how they related*
-Then we want to see the condition and the grade are related. So we do the chi-square test to see if they related or not.
+Now we want to see the condition and the grade are related. So we do the chi-square test to see if they related or not.
 ```{r chisq grade}
 
 cond.tbl <- table(kc_house_data$condition, kc_house_data$grade)
@@ -488,7 +473,7 @@ chisq.cond <- chisq.test(cond.tbl)
 chisq.cond
 
 ```
-Since the p-value is `r chisq.cond$p.value`, which is lower than 0.05. We need to reject the null hypothesis. Thus, the condition and grade are not independent. They are corrlated. Gerenally,  the grade is better when the condition is better.
+Since the p-value is `r chisq.cond$p.value`, which is lower than 0.05, we need to reject the null hypothesis. Thus, condition and grade are not independent. They are correlated. Gerenally, grade is better when condition is better.
 
 ## SMART Question: **Are older houses priced differently?**
 
@@ -542,24 +527,19 @@ ggplotly(ggplot(renov, aes(x=year.renov.noren, y=price, fill=year.renov.noren)) 
 
 ```
 
+We do BP test to test the homoscedasticity for different yr_built groups.
 
-*no anova..*
-We do BP test to the homoscedasticity for different year of built groups.
-
-H0: The variances of prices are the same accross the different year of built.  
-H1: The variances of prices are different accross the different year of built.  
+H0: Price variance is the same across the different yr_built groups.  
+H1: The variances of prices are not equal across different yr_built groups.  
 
 ```{r anova year}
 yr_p <- bptest(kc_house_data$price~year.built)
 yr_p
 ```
-Since the p-value is `r yr_p$p.value`, which is lower than 0.05, we need to reject the null hypothesis. The variances for different year built groups are different. Thus, the ANOVA test is not applicable.  
-
-*explain results and problems with it, introduce for next analysis below*
+Since the p-value is `r yr_p$p.value`, which is lower than 0.05, we need to reject the null hypothesis. The variances for different yr_built groups are not eqal. Thus, the ANOVA test is not applicable.  
 
 ### Comparison of year renovated with price
 
-*charts and all*
 ```{r}
 yr_BRP <- kc_house_data[c('price', 'yr_built', 'yr_renovated')]
 yr_BRP$yr_built = cut(yr_BRP$yr_built, breaks=c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
@@ -570,21 +550,14 @@ summary(yr_R.anova)
 t <- TukeyHSD(yr_R.anova)
 t
 ```
-Since the p-value is `r yr_R.anova$p.value`, which is less than 0.05. We need to reject the null hypothesis. Thus, the prices of the renovated are different accross the year of built. From the Turkey, we can see that the mean price of renovated hosue from 1947 to 1969 and 1924 to 1946 are different from each other. Same as the pair that built from 1970 to 1992 and 1924 to 1946. 
-*do anova for this one too*
-
-
-**compared renovated with built and see price changes too..**
+Since the p-value is `r yr_R.anova$p.value`, which is less than 0.05, we need to reject the null hypothesis. Thus, the prices of the renovated are different across yr_built. From the Tukey test, we can see that the mean price of renovated houses from 1947-1969 and 1924-1946 are different from each other. The same goes for the pair 1970-1992 and 1924-1946. 
 
 ## SMART Question: **Is quality affected by house age?**
 
-### Chi-square test for year they were built and grade
-*use chisq to assess old and quality independence*
+### Chi-square test for yr_built and grade
 
-#### Chi-square test for grade and year of built.  
-
-H0: The grade and year of built are independent.   
-H1: The grade and year of built are in not independent.   
+H0: Grade and yr_built are independent.   
+H1: Grade and yr_built are not independent.   
 
 ```{r chisq year}
 
@@ -592,34 +565,33 @@ gradey.tbl <- table(kc_house_data$grade, year.built)
 chisq.gradey <- chisq.test(gradey.tbl)
 chisq.gradey
 ```
-Since p-value is `r chisq.gradey$p.value`, which is lower 0.05, we need to reject the null hypothesis. Thus, the year built and grade are not independent. They are corrlated.  
+Since p-value is `r chisq.gradey$p.value`, which is lower 0.05, we need to reject the null hypothesis. Thus, the year built and grade are not independent. They are correlated.  
 
-#### Chi-square test for condition and year of built.
+#### Chi-square test for condition and yr_built.
 
-H0: The condition and year of built are independent.   
-H1: The condition and year of built are not independent.   
+H0: Condition and yr_built are independent.   
+H1: Condition and yr_built are not independent.   
 ```{r chisq year 2}
 
 condy.tbl <- table(kc_house_data$condition, year.built)
 chisq.condy <- chisq.test(condy.tbl)
 chisq.condy
 ```
-Since p-value is `r chisq.condy$p.value`, which is lower 0.05, we need to reject the null hypothesis. Thus, the year built and grade are not independent. They are corrlated.  
+Since p-value is `r chisq.condy$p.value`, which is lower 0.05, we need to reject the null hypothesis. Thus, the year built and condition are not independent. They are correlated.  
 
 ### Does quality get better when renovated?
-*use chisq to assess renovated and quality indep - replicate above chisq tests for year.renov*
 
 #### Chi-square test for condition and year of renovated.  
 
-H0: The condition and year of renovated are independent.   
-H1: The condition and year of renovated are not independent.   
+H0: Condition and yr_renovated are independent.   
+H1: Condition and yr_enovated are not independent.   
 
 ```{r chisq year 3}
 condy.tbl <- table(kc_house_data$condition, kc_house_data$yr_renovated)
 chisq.renov <- chisq.test(condy.tbl)
 chisq.renov
 ```
-Since p-value is `r chisq.renov$p.value`, which is lower 0.05, we need to reject the null hypothesis. Thus, the year built and grade are not independent. They are corrlated.  
+Since p-value is `r chisq.renov$p.value`, which is lower 0.05, we need to reject the null hypothesis. Thus, condition and yr_renovated are not independent. They are correlated.  
 
 **subset for older houses with renovation and rerun both tests and see difference in time**
 
@@ -671,7 +643,7 @@ summary(model3)
 vif(model3)
 ```
 
-The 5 levels of the "condition" variable are all insignificant, so we can  drop the "condition" variable. For the "grade" variable, higher grade levels have significant effects on price. By contrast, low grade does not affect price significantly. 
+The 5 levels of the "condition" variable are all insignificant, so we can drop the "condition" variable. For the "grade" variable, higher grade levels have significant effects on price. By contrast, low grade does not affect price significantly. 
 
 ```{r}
 model11 <- lm(price~.-condition,data=h3)
@@ -703,11 +675,11 @@ Problem: As the price histogram above is quite left-skewed, it means there are m
 
 
 # Chapter 6: Conclusion
-*final insights, main relationships, predictors, what to look in a real estate dataset etc..*
-*future openings for further studies, analysis, tests etc on this..*
 
 In conclusion, this analysis provided many insights into the dynamics of the housing market in the Seattle area. After conducting EDA on most of the variables in the dataset and considered possible interactions among them, we were able to narrow down better questions to assess what could actually cause price fluctuations for houses in the area. In particular, we realized how few houses were renovated (or at least recorded as such), providing us no explanation for the not so great difference in prices between older and newer house. Most likely, we suppose older houses may have some historical values thus a comparable price to the newer buildings.  
+
 As we proceeded with further hypothesis analysis, we were able to confirm the expected answers to most of our questions, as price resulted influenced by sqft, quality and in some way age. Finally, our regression model uncovered further elements to predict housing price on several variables present in the dataset, making it easier for future consultancy and possible to run through future datasets and adjust for better predictive power.  
+
 We believe that additional and more extensive information on renovation may have provided useful insights to assess the actual correlation between age and price of houses. Further details on certain more unclear variables could have also made this analysis and the data behind it stronger and more replicable. Further study would have the possibility to examine the ... as the market in the area proves to be booming, and also particularly impactful for many data scientists moving to WA for employment opportunities.
 
 

@@ -49,7 +49,7 @@ https://www.kaggle.com/harlfoxem/housesalesprediction/data
 https://github.com/matteobucalossi50/DATS6101_Project
 
 ```{r, echo=FALSE}
-kc_house_data <- read.csv("~/Downloads/kc_house_data.csv")
+kc_house_data <- read.csv("kc_house_data.csv")
 str(kc_house_data)
 colnames(kc_house_data)
 ```
@@ -305,6 +305,8 @@ Since p-value is lower 0.05, we need to reject the null hypothesis. Thus, the ye
 
 ### Chi-square of the bedroom and bathroom variables. Significant relationship with price.
 
+H0: The price and number of bedrooms are independent.  
+H1: The price and number of bedrooms are not independent.  
 ```{r chisq bedr}
 price.intrv = cut(kc_house_data$price, c(0, 250000, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000))
 number.bathrooms <- cut(kc_house_data$bathrooms, breaks = c(0,2,4,6,8), labels = c("0.5-1.5", "2-3.5", "4-5.5", "6-8"))
@@ -315,7 +317,7 @@ bath_p <- table(number.bathrooms, price.intrv)
 x2test2 = chisq.test(bath_p)
 x2test2
 ```
-Since both p-values are lower 0.05, we need to reject the null hypothesis. Thus, the number of bedrooms and the number of bathrooms are not independent from the grade of house. They are corrlated. Generally, the price increases when the number of bedrooms and bathrooms become greater.
+Since both p-values are lower 0.05, we need to reject the null hypothesis. Thus, the number of bedrooms and the number of bathrooms are not independent from the price of house. They are corrlated. Generally, the price increases when the number of bedrooms and bathrooms become greater.
 
 ## Anova tests
 
@@ -377,7 +379,8 @@ H0: The variances of prices are the same accross the different year of built.
 H1: The variances of prices are different accross the different year of built.  
 
 ```{r anova year}
-bptest(kc_house_data$price~year.built)
+x<-bptest(kc_house_data$price~year.built)
+x
 ```
 Since the p-value is lower than 0.05, we need to reject the null hypothesis. The variances for different year built groups are different. Thus, the ANOVA test is not applicable.  
 

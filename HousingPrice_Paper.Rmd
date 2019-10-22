@@ -44,16 +44,14 @@ loadPkg('rmdformats')
 
 # Chapter 1: Introduction
 
-*insert intro here: why this dataset, background research on topic and data, what this data and report about, table of contents description*
-
 Seattle boasts among the "hottest" housing markets in the United States; as of [July 2018](https://bit.ly/2v5UMcn), Seattle "led the nation in home price gains" for 21 straight months, topped only by Portland in the 1990s – a trend driven by the city's tech sector and a  lack of supply compared with demand. Given the Seattle housing market's notoriety for high prices, we were interested in exploring which variables affect housing price in this market. With this goal in mind, we found a public dataset on Kaggle ("House Sales in King County, USA") offering 21,613 observations across 21 variables. According to Kaggle, it "includes homes sold between May 2014 and May 2015." Although it doesn't explore macro-level variables affecting housing price (such as the local job market, Amazon presence, etc.), it does focus on micro-level variables, such as renovations, number of bedrooms, square feet of living space, etc. that are common to virtually all housing markets in the United States. As a result, our analysis could lay the groundwork for future comparative analysis with other housing markets across the country.
 
 This report is organized as follows:
 
 1. Description of the Data (explanation of the dataset and its variables, 
 2. Geographic Coverage of Data
-3. House Prices vs. Size
-4. Factors Analysis
+3. Independent Variables EDA: Slicing the Data for an Overview
+4. Independent Variables EDA: Boxplots, Scatterplots, ANOVA, & Chi-Square
 5. Multiple Linear Regression Model
 6. Conclusion
 
@@ -91,7 +89,7 @@ str(kc_house_data)
 20. Sqft_living15 (the square footage of the interior housing living space for the nearest 15 neighbors)
 21. Sqft_lot15 (the square footage of the land lots of the nearest 15 neighbors)
 
-For our exploratory data analysis, we ignored "Id" and "Date" because these are independent variables with no relation to price. We also ignored "floors" because it can be considered a proxy for sqft_living. "Waterfront" and "View" were dropped because the vast majority of properties were coded as "0". We ignored sqft_basement and sqft_above because they were corollaries of "sqft_living" (we didn't want redundancy in our analysis). We also ignored "sqft_living 15" and "sqft_lot15" because we were interested only in the attributes of individual houses, not those of their surrounding neighborhoods (although that could make for an interesting follow-up study).
+For our exploratory data analysis, we ignored "Id" and "Date" because these are independent variables with no relation to price. We also ignored "floors" because it can be considered a proxy for sqft_living. "Waterfront" and "View" were dropped because the vast majority of properties were coded as "0". We ignored sqft_basement and sqft_above because they were corollaries of "sqft_living" (we didn't want redundancy in our analysis). We also ignored "sqft_living 15" and "sqft_lot15" because we were interested only in the attributes of individual houses, not those of their surrounding neighborhoods for our initial EDA.
 
 Following these decisions, we cleaned the data accordingly: we dropped "waterfront" and "view"; we subsetted the dataset to include only properties with more than 0 bedrooms and bathrooms (we considered these "outlier" properties); we subsetted the dataset to include only properties with less than 30 bedrooms (given the likely mistake of recording that many rooms in much smaller houses in terms of sqft); we dropped "NA" values from the dataset to simplify our analysis ("NA" values are hard to perform operations on); we converted "condition" and "grade" into factor variables because they are effectively intervals; and we ran "housing price" through a logarithmic function to make for better visualization.
 
@@ -218,7 +216,7 @@ print(aggregate(price~grade,data=kc_house_data,FUN=mean))
 
 *add histograms for bedroom variable and sqft living variable - comment on them, why such house be that in real world etc etc..*
 
-Below we have included histograms for "bedrooms", "sqft_living", and "sqft_lot". Upon inspecting the graphs, it becomes clear that most of the properties in this dataset have around 3 bedrooms, while the majority of properties are around 1000-2000 square feet (for reference, in 2015, the average US house size was around 2,600 square feet (https://bit.ly/32zY9Hi)); as for sqft_lot, most of the properties have between 5,000 and 10,000 square feet of land. As with the housing price histogram shown earlier, these histograms are right-skewed.
+Below we have included histograms for "bedrooms", "sqft_living", and "sqft_lot". Upon inspecting the graphs, it becomes clear that most of the properties in this dataset have around 3 bedrooms, while the majority of properties are around 1000-2000 square feet (for reference, in 2015, the average [US house size](https://bit.ly/32zY9Hi) was around 2,600 square feet); as for sqft_lot, most of the properties have between 5,000 and 10,000 square feet of land. As with the housing price histogram shown earlier, these histograms are right-skewed.
 
 ```{r bedroom hist, echo=FALSE}
 
@@ -228,7 +226,7 @@ hist(kc_house_data$bedrooms[kc_house_data$bedrooms<=6], col = "chartreuse1", cex
 
 ```{r sqft_living hist, echo=FALSE}
 
-hist(kc_house_data$sqft_living[kc_house_data$sqft_living<=6000], col = "yellow1", cex.axis = .75, xlab = "Sqft Living", main = "Sqft Living Histogram")
+hist(kc_house_data$sqft_living[kc_house_data$sqft_living<=6000], col = heat.colors(12), cex.axis = .75, xlab = "Sqft Living", main = "Sqft Living Histogram")
 
 ```
 

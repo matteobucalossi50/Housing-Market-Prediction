@@ -180,6 +180,7 @@ axis(side=1, at=axTicks(1),
 qqnorm(kc_house_data$price, pch = 20, cex = .5, main = "Housing Prices: Normal Q-Q Plot", ylab = "Housing Price ($)", cex.axis = .75)
 
 ```
+   
 Just for context, the following readouts offer cross sections of Seattle's most expensive houses; average prices for each condition level; and average prices for each grade level.
 
 ### What do the most expensive houses look like?
@@ -250,6 +251,7 @@ The properties with the largest amount of land are also priced highly, but not a
 top3 <- top_n(kc_house_data, 5, sqft_lot) %>% arrange(desc(sqft_lot))
 datatable(top3, rownames = FALSE, options = list(pageLength = 5, scrollX=T))
 ```
+   
 The properties with the largest number of bedrooms are also priced highly (around or above the dataset mean of $540,000), but not quite as highly as those in the "sqft_living" readout. Since "bedrooms" contributes in part – but not in whole – to sqft_living, it makes sense that its correlation with housing price is lower than that of sqft_living.
 
 ```{r top bedrooms, echo=FALSE}
@@ -556,7 +558,7 @@ Even though we could not perform an ANOVA test for the overall sample of houses 
 
 Here, we've graphed housing price by yr_renovated itself. This graph also showcases only 914 properties – the ones that were renovated. Generally speaking, as "yr_renovated" approaches the present day, price increases. The exception is between the 1924-1946 and 1947-1969 intervals; note however, that only `r nrow(kc_house_data[kc_house_data$yr_renovated >0 & kc_house_data$yr_renovated <= "1946", ])` properties occupy the first interval.
 
-```{r price_by_year_renovated, echo=FALSE}
+```{r price_by_year_renovated}
 
 year.renov.noren <- cut(renov$yr_renovated, breaks = c(1899,1923,1946,1969,1992,2015), labels = c("1900-1923", "1924-1946", "1947-1969", "1970-1992", "1993-2015"))
 

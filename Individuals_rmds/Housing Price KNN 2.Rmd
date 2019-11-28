@@ -1,0 +1,200 @@
+---
+title: "Housing Price KNN 2"
+author: "Daniel Frey"
+date: "11/16/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r basicfcn, include=F}
+# can add quietly=T option to the require() function
+loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.packages(x,dep=T,repos="http://cran.us.r-project.org"); if(!require(x,character.only=T)) stop("Package not found") } }
+```
+
+```{r loaddata}
+
+loadPkg("readr")
+loadPkg("dplyr")
+loadPkg("tidyr")
+loadPkg("tidyverse")
+loadPkg("ggplot2")
+loadPkg('ggmap')
+loadPkg('rjson')
+loadPkg('jsonlite')
+loadPkg('leaflet')
+loadPkg('grDevices')
+loadPkg('scales')
+loadPkg('RCurl')
+loadPkg('sp')
+loadPkg('geojsonio')
+loadPkg('lmtest')
+loadPkg("faraway")
+loadPkg("corrplot")
+loadPkg("modelr")
+loadPkg('DT')
+loadPkg('plotly')
+loadPkg('rmdformats')
+loadPkg('class')
+
+kc_house_data <- data.frame(read_csv("~/Downloads/kc_house_data.csv"))
+
+kc_house_data <- subset(kc_house_data, select = -c(9, 10))
+
+kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms != 0)
+
+kc_house_data <- subset(kc_house_data, kc_house_data$bathrooms != 0)
+
+kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms < 30)
+
+kc_house_data <-  drop_na(kc_house_data)
+
+kc_house_data$condition <- as.factor(kc_house_data$condition)
+
+kc_house_data$grade <- as.factor(kc_house_data$grade)
+
+```
+
+Here, we convert "price" to a factor variable and divide it into 3 categories ("Low", "Medium", and "High") to prepare for KNN analysis.
+
+```{r price_categorization, echo=TRUE}
+
+kc_house_data$price <- cut(kc_house_data$price, breaks = 3, labels = c("Low", "Medium", "High")) # categorization of house prices
+
+summary(kc_house_data$price) # distribution of data points according to their categories
+
+```
+
+Next, we split the data into 80% training, and 20% test subsets.
+
+```{r datasplit, echo=TRUE}
+set.seed(1)
+kc_house_data_train_rows = sample(1:nrow(kc_house_data),     #<- from 1 to the number of 
+                                                     #   rows in the data set
+                              round(0.8 * nrow(kc_house_data), 0),  #<- multiply the 
+                                                                #   number of rows
+                                                                #   by 0.8 and round
+                                                                #   the decimals
+                              replace = FALSE)       #<- don't replace the numbers
+
+# Let's check to make sure we have 80% of the rows. 
+length(kc_house_data_train_rows) / nrow(kc_house_data)
+
+kc_house_data_train = kc_house_data[kc_house_data_train_rows, ]  #<- select the rows identified in
+                                                     #   the kc_house_data_train_rows data
+kc_house_data_test = kc_house_data[-kc_house_data_train_rows, ]  #<- select the rows that weren't 
+                                                     #   identified in the
+                                                     #   kc_house_data_train_rows data
+
+```
+
+We then apply the chooseK() function to determine the best KNN k value for our dataset. Within the chooseK() function itself, I select features that are truly numeric (KNN requires predictor variables to be numeric). For instance, even though "yr_built" is classified as an "integer" data type, a concept such as year is best thought of as categorical, not numerical. As a result, I chose to exclude this and other similar variables from the analysis.
+
+From the resulting graph, it becomes evident that 5 is approximately the best value for k: it offers the highest accuracy before the change in accuracy begins to trail off.
+
+```{r chooseK, echo=FALSE}
+chooseK = function(k, train_set, val_set, train_class, val_class){
+  
+  # Build knn with k neighbors considered.
+  set.seed(1)
+  class_knn = knn(train = train_set,    #<- training set cases
+                  test = val_set,       #<- test set cases
+                  cl = train_class,     #<- category for classification
+                  k = k,                #<- number of neighbors considered
+                  use.all = TRUE)       #<- control ties between class assignments
+                                        #   If true, all distances equal to the kth 
+                                        #   largest are included
+  
+  tab = table(class_knn, val_class)
+  
+  # Calculate the accuracy. 
+  accu = sum(tab[row(tab) == col(tab)]) / sum(tab)                         
+  cbind(k = k, accuracy = accu)
+}
+
+# The sapply() function plugs in several values into our chooseK function.
+# function(x)[function] allows you to apply a series of numbers
+# to a function without running a for() loop.
+knn_different_k = sapply(seq(1, 25, by = 2),  #<- set k to be odd number from 1 to 25
+                         function(x) chooseK(x, 
+                                             train_set = kc_house_data_train[, c("bedrooms", "bathrooms", "sqft_living", "sqft_lot", "floors", "sqft_above", "sqft_basement", "sqft_living15", "sqft_lot15")],
+                                             val_set = kc_house_data_test[, c("bedrooms", "bathrooms", "sqft_living", "sqft_lot", "floors", "sqft_above", "sqft_basement", "sqft_living15", "sqft_lot15")],
+                                             train_class = kc_house_data_train[, "price"],
+                                             val_class = kc_house_data_test[, "price"]))
+
+# Reformat the results to graph the results.
+str(knn_different_k)
+knn_different_k = data.frame(k = knn_different_k[1,],
+                             accuracy = knn_different_k[2,])
+
+# Plot accuracy vs. k.
+# install.packages("ggplot2")
+loadPkg("ggplot2")
+
+ggplot(knn_different_k,
+       aes(x = k, y = accuracy)) +
+  geom_line(color = "orange", size = 1.5) +
+  geom_point(size = 3)
+
+```
+
+Now that we have our k value, we can run our KNN analysis, using the same features we fed the chooseK() function previously.
+
+```{r KNNtraining, echo=TRUE}
+
+# Let's train the classifier for k = 5 
+# Install the "class" package that we'll use to run kNN.
+# Take some time to learn about all its functionality.
+# install.packages("class") 
+loadPkg("class")
+
+# k-Nearest Neighbor is a randomized algorithm, so make sure to
+# use set.seed() to make your results repeatable.
+set.seed(1)
+price_predict = knn(train = kc_house_data_train[, c("bedrooms", "bathrooms", "sqft_living", "sqft_lot", "floors", "sqft_above", "sqft_basement", "sqft_living15", "sqft_lot15")],  #<- training set cases
+               test = kc_house_data_test[, c("bedrooms", "bathrooms", "sqft_living", "sqft_lot", "floors", "sqft_above", "sqft_basement", "sqft_living15", "sqft_lot15")],    #<- test set cases
+               cl = kc_house_data_train[, "price"],                         #<- category for true classification
+               k = 5) #,                                                    #<- number of neighbors considered
+               # use.all = TRUE)                                            #<- control ties between class assignments
+                                                                            #   If true, all distances equal to the kth 
+                                                                            #   largest are included
+
+# View the output.
+str(price_predict)
+length(price_predict)
+table(price_predict)
+
+```
+
+Now let's take a look at the results. Our KNN model classified housing price correctly about 99.6% of the time, or 4305 out of a possible 4319 test cases. That's quite good.
+
+It misclassified 14 medium priced houses as "low". It's understandable that the algorithm would misclassify medium priced houses as "low", since those categories are next to each other.
+
+KNN is a useful algorithm for classifying data points. We showed that at 99.6% accuracy, our algorithm successfully predicted housing price categories based on variables such as "bedrooms", "bathrooms", "sqft_living", "sqft_lot", "floors", "sqft_above", "sqft_basement", "sqft_living15", and "sqft_lot15". If we were in the real estate market and wanted to know how high or low we should price a house, we could determine an answer based on these variables.
+
+
+```{r comparison_of_knnclassification_with_true_class, echo=TRUE}
+
+# How does the kNN classification compare to the true class?
+# Let's take a look at the confusion matrix by combining the 
+# predictions from price_predict to the original data set.
+kNN_res = table(price_predict,
+                kc_house_data_test$`price`)
+
+kNN_res
+sum(kNN_res)  #<- the total is all the test examples
+
+# Select the true positives and true negatives by selecting
+# only the cells where the row and column names are the same.
+kNN_res[row(kNN_res) == col(kNN_res)]
+
+# Calculate the accuracy rate by dividing the correct classifications
+# by the total number of classifications.
+kNN_acc = sum(kNN_res[row(kNN_res) == col(kNN_res)]) / sum(kNN_res)
+kNN_acc
+
+
+```
+

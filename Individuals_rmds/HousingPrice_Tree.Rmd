@@ -1,0 +1,157 @@
+---
+title: "Housing Market - DT"
+author: "Anti-Code Group"
+date: "11/26/2019"
+output:  
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(scipen = 999)
+```
+
+```{r basicfunct, include=FALSE}
+loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.packages(x,dep=T,repos="http://cran.us.r-project.org"); if(!require(x,character.only=T)) stop("Package not found") } }
+```
+
+```{r base_lib, include=FALSE}
+loadPkg("dplyr")
+loadPkg("tidyr")
+loadPkg("tidyverse")
+loadPkg("ggplot2")
+loadPkg('ggmap')
+loadPkg('rjson')
+loadPkg('jsonlite')
+loadPkg('leaflet')
+loadPkg('grDevices')
+loadPkg('scales')
+loadPkg('RCurl')
+loadPkg('sp')
+loadPkg('geojsonio')
+loadPkg('lmtest')
+loadPkg("faraway")
+loadPkg("corrplot")
+loadPkg("modelr")
+loadPkg('DT')
+loadPkg('plotly')
+loadPkg('rmdformats')
+loadPkg("rpart") 
+loadPkg("caret") 
+loadPkg("rpart.plot")
+loadPkg("rattle") # For fancyRpartPlot (Trees) Answer "no" on installing from binary source
+loadPkg("tree") 
+loadPkg('ISLR')
+loadPkg('randomForest')
+loadPkg('leaps')
+```
+
+## Loading Data and Clean
+
+https://www.kaggle.com/harlfoxem/housesalesprediction/data
+
+https://github.com/matteobucalossi50/DATS6101_Project
+
+```{r data, echo=FALSE}
+kc_house_data <- read.csv("kc_house_data.csv")
+str(kc_house_data)
+```
+
+```{r clean, include=FALSE}
+kc_house_data <- subset(kc_house_data, select = -c(9, 10))
+
+kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms != 0)
+
+kc_house_data <- subset(kc_house_data, kc_house_data$bathrooms != 0)
+
+kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms < 30)
+
+kc_house_data <-  drop_na(kc_house_data)
+
+kc_house_data$condition <- as.factor(kc_house_data$condition)
+
+kc_house_data$grade <- as.factor(kc_house_data$grade)
+
+price.ln = log(kc_house_data$price)
+
+```
+
+# Trees
+
+## feature selection
+
+```{r featsel, echo=FALSE}
+regselec <- regsubsets(price~ bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=kc_house_data, nvmax = 12, method = "seqrep")
+summary(regselec)
+plot(regselec, scale='bic', main='Bayesian Information Criterion for Price')
+```
+
+## Regression Tree
+
+```{r tree, echo=FALSE}
+tree1 <- tree(log(price) ~ bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=kc_house_data)
+summary(tree1)
+#printcp(tree1) # results 
+#plotcp(tree1) # cross-validation results 
+```
+
+```{r plott, echo=FALSE}
+plot(tree1) 
+text(tree1,cex=0.75)
+#post(tree1, file = "tree1.ps", title = "1 Regression Tree for Price")
+```
+
+```{r tree2, echo=FALSE}
+tree2 <- rpart(log(price) ~ bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=kc_house_data, cp=.02)
+rpart.plot(tree2, box.palette="RdBu", shadow.col="gray", nn=TRUE)
+fancyRpartPlot(tree2)
+```
+
+
+```{r prune, echo=FALSE}
+# prune.tree(tree1,best=5) 
+tree1.seq <- prune.tree(tree1)
+plot(tree1.seq)
+tree1.seq$dev
+
+# order best pruned trees (by error) and optimal one
+opt.trees = which(tree1.seq$dev == min(tree1.seq$dev)) 
+min(tree1.seq$size[opt.trees])
+```
+
+
+```{r tree test, echo=FALSE}
+set.seed(1234)
+kc_trainind <-  sample(seq_len(nrow(kc_house_data)), size = 0.8*nrow(kc_house_data))
+kc_train <-  kc_house_data[kc_trainind, ]
+kc_test <-  kc_house_data[-kc_trainind, ]
+tree.pred <- tree(price~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=kc_train, mindev=0.001)
+prune.tree(tree.pred, best = 5)
+```
+
+```{r pred, echo=FALSE}
+prune.tree(tree.pred, best = 5, newdata = kc_test)
+```
+
+```{r seq, echo=FALSE}
+tree.pred.seq <- prune.tree(tree.pred)
+plot(tree.pred)
+text(tree.pred,cex=0.75)
+tree.pred.seq$dev
+```
+
+# Random Forest
+
+```{r rf, echo=FALSE}
+set.seed(100)
+kc_trainind <-  sample(seq_len(nrow(kc_house_data)), size = 0.8*nrow(kc_house_data))
+kc_train <-  kc_house_data[kc_trainind, ]
+kc_test <-  kc_house_data[-kc_trainind, ]
+ff1 <- randomForest(price~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data = kc_train, importance = TRUE)
+ff1
+```
+
+

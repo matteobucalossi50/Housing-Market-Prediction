@@ -81,77 +81,85 @@ price.ln = log(kc_house_data$price)
 
 # Trees
 
-## feature selection
-
-```{r featsel, echo=FALSE}
-regselec <- regsubsets(price~ bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=kc_house_data, nvmax = 12, method = "seqrep")
-summary(regselec)
-plot(regselec, scale='bic', main='Bayesian Information Criterion for Price')
-```
-
 ## Regression Tree
 
 ```{r tree, echo=FALSE}
 tree1 <- tree(log(price) ~ bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=kc_house_data)
 summary(tree1)
-#printcp(tree1) # results 
-#plotcp(tree1) # cross-validation results 
 ```
+
+The tree built on all the features used as predictors (namely excluding id, date, geographic variables and sqft_living15 and sqft_lot15) for price, presents 3 termindal nodes and a mean squared error of 0.12.
 
 ```{r plott, echo=FALSE}
 plot(tree1) 
 text(tree1,cex=0.75)
-#post(tree1, file = "tree1.ps", title = "1 Regression Tree for Price")
 ```
+
+We can see that the algorithm splits the data using grade, yr_built and sqft_living. As expected, if grade is better and sqft_living are larger, price would be higher. While if grade is lower and houses get older and smaller, price would then be likely lower.
+As we used the log of price to predict price with this tree, we can see how the highest average of price in the farthest right leaf is `r exp(14.07)` dollars and the lowest average of price in the farthest left is `r exp(12.52)` dollars.
 
 ```{r tree2, echo=FALSE}
 tree2 <- rpart(log(price) ~ bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=kc_house_data, cp=.02)
-rpart.plot(tree2, box.palette="RdBu", shadow.col="gray", nn=TRUE)
+
+par(xpd = NA, mar = rep(0.7, 4)) 
+plot(tree2, compress = TRUE)
+text(tree2, cex = 0.7, use.n = TRUE, fancy = TRUE, all = TRUE)
 fancyRpartPlot(tree2)
+
+rpart.plot(tree2, box.palette="RdBu", shadow.col="gray", nn=TRUE)
 ```
 
+Using the package rpart, we can build a tree that provides a similar result but from which we can observe the proportion of sample observations present in each terminal leaf (in this case 7). As expected, the right branches of the tree only contain 20% of the houses, while the largest proportion are on the left branches given their lower price.
+
+## Prune tree
 
 ```{r prune, echo=FALSE}
-# prune.tree(tree1,best=5) 
-tree1.seq <- prune.tree(tree1)
-plot(tree1.seq)
-tree1.seq$dev
+tree1.seq <- prune.tree(tree1) # Sequence of pruned tree sizes/errors
+plot(tree1.seq)  # error versus plot size
+tree1.seq$dev # Vector of error rates for prunings in order 
 
-# order best pruned trees (by error) and optimal one
-opt.trees = which(tree1.seq$dev == min(tree1.seq$dev)) 
-min(tree1.seq$size[opt.trees])
+opt.trees = which(tree1.seq$dev == min(tree1.seq$dev)) # Positions of optimal (with respect to error) trees
+min(tree1.seq$size[opt.trees]) # Size of smallest optimal tree
+
+prune.tree(tree1,best=5) # Returns best pruned tree with all data
 ```
 
 
-```{r tree test, echo=FALSE}
-set.seed(1234)
-kc_trainind <-  sample(seq_len(nrow(kc_house_data)), size = 0.8*nrow(kc_house_data))
-kc_train <-  kc_house_data[kc_trainind, ]
-kc_test <-  kc_house_data[-kc_trainind, ]
-tree.pred <- tree(price~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=kc_train, mindev=0.001)
-prune.tree(tree.pred, best = 5)
+## Testing model 
+
+```{r split, echo=FALSE}
+fold <- floor(runif(nrow(kc_house_data),1,11)) 
+  kc_house_data$fold <- fold
+test.set <- kc_house_data[kc_house_data$fold == 1,] 
+train.set <- kc_house_data[kc_house_data$fold != 1,] 
 ```
 
-```{r pred, echo=FALSE}
-prune.tree(tree.pred, best = 5, newdata = kc_test)
-```
+```{r test, echo=FALSE}
+tree.pred <- tree(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=train.set, mindev=0.001)
+treepr <- prune.tree(tree.pred, best = 5) # Return best pruned tree with 5 leaves, evaluating error on training data
+treepr
+plot(treepr) 
+text(treepr,cex=0.75, digits=3)
 
-```{r seq, echo=FALSE}
 tree.pred.seq <- prune.tree(tree.pred)
-plot(tree.pred)
-text(tree.pred,cex=0.75)
+plot(tree.pred.seq)
 tree.pred.seq$dev
 ```
+
+
+```{r pred, echo=FALSE}
+treepr.pred <- prune.tree(tree.pred, best = 5, newdata = test.set) #evaluates on test data
+treepr.pred
+plot(treepr.pred) 
+text(treepr.pred,cex=0.75, digits=3)
+```
+
 
 # Random Forest
 
 ```{r rf, echo=FALSE}
-set.seed(100)
-kc_trainind <-  sample(seq_len(nrow(kc_house_data)), size = 0.8*nrow(kc_house_data))
-kc_train <-  kc_house_data[kc_trainind, ]
-kc_test <-  kc_house_data[-kc_trainind, ]
-ff1 <- randomForest(price~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data = kc_train, importance = TRUE)
+ff1 <- randomForest(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data = train.set, importance = TRUE)
 ff1
 ```
 
-
+A regression random forest on all the predictors variables for price leads to 500 trees ensembled for 3 variables tried at each split, and eventually provides a 68.5% of variance explained.

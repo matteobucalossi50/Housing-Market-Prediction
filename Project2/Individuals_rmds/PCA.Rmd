@@ -1,0 +1,117 @@
+---
+title: "6101 pres"
+author: "Changhao Ying"
+date: "2019Äê11ÔÂ16ÈÕ"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##PCA#
+```{r include=FALSE}
+library("dplyr")
+library("tidyr")
+library("tidyverse")
+library("ggplot2")
+library("Rmisc")
+library("MASS")
+library("corrplot")
+library("faraway")
+library("factoextra")
+library("pls")
+library("magrittr")
+```
+
+```{r}
+house <- data.frame(read.csv("kc_house_data.csv", header = TRUE))
+str(house)
+```
+
+##subset data 
+```{r}
+house2 <- subset(house,select = -c(id,date,waterfront,view,zipcode,lat,long,sqft_living15,sqft_lot15,yr_renovated))
+str(house2)
+```
+##All numeric variables. 
+
+```{r}
+sum(is.na(house2))
+```
+
+
+
+```{r}
+corx=cor(house2[,-1])
+corx
+```
+
+
+
+##Here we have 10 variables which are correlated and we want to reduce the number of them, pick up the important ones.
+
+##PCA part,scale=T normalize the variables becuase they have different scales.
+```{r}
+prin_comp <- prcomp(scale(house2[,-1]))
+summary(prin_comp)
+prin_comp$center ##output the mean of variables
+prin_comp$scale ##output the sd of variables
+```
+
+```{r}
+prin_comp$rotation
+```
+
+```{r}
+fviz_eig(prin_comp)
+```
+
+
+
+
+
+```{r}
+biplot(prin_comp, scale = 0)
+##The first principle component looks like sqft_above, the second looks like sqft_basement)
+```
+
+```{r}
+biplot(prin_comp,6:7, scale =0)
+```
+
+
+```{r}
+pr.var <- (prin_comp$sdev^2)
+pve <- pr.var/sum(pr.var)
+plot(cumsum(pve), xlab="Principal Component (standardized)", ylab ="Cumulative Proportion of Variance Explained",ylim=c(0,1),type="b")
+```
+
+##7 components result in close to 95% 
+
+
+##Predicting use pca
+
+```{r}
+houseprice <- prin_comp$x
+modHouses <- lm(house2$price ~ houseprice[,1:7])
+summary(modHouses)
+```
+
+```{r}
+fullmodel=lm(price~.-sqft_basement,data=house2)
+summary(fullmodel)
+```
+
+
+```{r}
+par(mfrow = c(1,2))
+plot(house2$price, predict(modHouses), xlab = "actual price", ylab = "Predicted price", main = "PCR", abline(a = 0, b = 1, col = "red"))
+plot(house2$price, predict(fullmodel), xlab = "actual price", ylab = "Predicted price", main = "Full model", abline(a = 0, b = 1, col = "red"))
+```
+
+##R^2 of full model is 0.618 which is higher than pcr which is 0.613
+##we can see that both models underestimate the value of house price over 4e+06
+
+
+

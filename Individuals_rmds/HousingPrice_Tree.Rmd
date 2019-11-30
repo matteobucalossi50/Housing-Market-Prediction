@@ -111,6 +111,16 @@ rpart.plot(tree2, box.palette="RdBu", shadow.col="gray", nn=TRUE)
 
 Using the package rpart, we can build a tree that provides a similar result but from which we can observe the proportion of sample observations present in each terminal leaf (in this case 7). As expected, the right branches of the tree only contain 20% of the houses, while the largest proportion are on the left branches given their lower price.
 
+```{r maptree, echo=FALSE}
+treefit = tree(log(price) ~ long+lat,data=kc_house_data)
+plot(treefit)
+text(treefit, cex=0.75)
+price.deciles = quantile(kc_house_data$price,0:10/10)
+cut.prices = cut(kc_house_data$price,price.deciles,include.lowest=TRUE)
+plot(kc_house_data$long,kc_house_data$lat,col=grey(10:2/11)[cut.prices],pch=20,xlab="Longitude",ylab="Latitude")
+partition.tree(treefit,ordvars=c("long","lat"),add=TRUE)
+```
+
 ## Prune tree
 
 ```{r prune, echo=FALSE}
@@ -123,7 +133,7 @@ min(tree1.seq$size[opt.trees]) # Size of smallest optimal tree
 
 prune.tree(tree1,best=5) # Returns best pruned tree with all data
 ```
-
+Plotting the error versus the size of trees, we can see that the optimal pruned tree (smallest tree minimizing the errors) would have 9 nodes.
 
 ## Testing model 
 
@@ -144,8 +154,11 @@ text(treepr,cex=0.75, digits=3)
 tree.pred.seq <- prune.tree(tree.pred)
 plot(tree.pred.seq)
 tree.pred.seq$dev
+opt.trees = which(tree.pred.seq$dev == min(tree.pred.seq$dev)) 
+min(tree.pred.seq$size[opt.trees]) 
 ```
 
+Building the tress on training dataset, we obtain a slighlty different tree pruned to 5 leaves, which splits data on grade first and then sqft_living. The plot of errors versus size also points out an optimal tree at 34 nodes.
 
 ```{r pred, echo=FALSE}
 treepr.pred <- prune.tree(tree.pred, best = 5, newdata = test.set) #evaluates on test data
@@ -154,6 +167,7 @@ plot(treepr.pred)
 text(treepr.pred,cex=0.75, digits=3)
 ```
 
+Evaluating this tree on test data, we can see how the trained model did a good job at predicting price for the dataset as errors and tree are almost identical.
 
 # Random Forest
 
@@ -162,4 +176,4 @@ ff1 <- randomForest(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + f
 ff1
 ```
 
-A regression random forest on all the predictors variables for price leads to 500 trees ensembled for 3 variables tried at each split, and eventually provides a 68.5% of variance explained.
+A regression random forest on all the predictors variables for price leads to 500 trees ensembled for 3 variables tried at each split, and eventually provides a 68.5% of variance explained and a MSE of 0.0875.

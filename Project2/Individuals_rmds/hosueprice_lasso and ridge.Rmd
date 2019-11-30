@@ -1,0 +1,236 @@
+---
+title: "Project2-Intro to DS"
+author: "Jialei Chen"
+date: "2019/11/21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(scipen = 999)
+```
+
+```{r basicfunct, include=FALSE}
+loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.packages(x,dep=T,repos="http://cran.us.r-project.org"); if(!require(x,character.only=T)) stop("Package not found") } }
+```
+
+```{r base_lib, include=FALSE}
+loadPkg("dplyr")
+loadPkg("tidyr")
+loadPkg("tidyverse")
+loadPkg("ggplot2")
+loadPkg('ggmap')
+loadPkg('rjson')
+loadPkg('jsonlite')
+loadPkg('leaflet')
+loadPkg('grDevices')
+loadPkg('scales')
+loadPkg('RCurl')
+loadPkg('sp')
+loadPkg('geojsonio')
+loadPkg('lmtest')
+loadPkg("faraway")
+loadPkg("corrplot")
+loadPkg("modelr")
+loadPkg('DT')
+loadPkg('plotly')
+loadPkg('rmdformats')
+loadPkg("glmnet")
+```
+
+```{r uzscale_fcn }
+uzscale <- function(df, append=0, excl=NULL) { 
+  #' Standardize dataframe to z scores, safe for non-numeric variables. 
+  #' ELo 201904 GWU DATS
+  #' @param df The dataframe.
+  #' @param append T/F or 0/1. Option to append scaled columns or replace original columns in the dataframe.
+  #' @param excl A list c(a,b,"d","ef") of excluded columns, either by their indexes and/or names.
+  #' @return The transformed dataframe, appended or replaced with standardized scores. Non-numeric columns will not be appended, or if "replace option" is chosen, the columns will be untouched.
+  #' @examples
+  #' library("ISLR")
+  #' tmp = uzscale( Hitters )
+  #' tmp = uzscale( Hitters, 1 )
+  #' tmp = uzscale( Hitters, TRUE, c(19,"NewLeague") )
+
+  append = ifelse(append==TRUE || append=="true" || append=="True" || append=="T" || append=="t" || append==1 || append=="1", TRUE, FALSE) # standardize append 
+  nmax = length(df)
+  if (nmax < 1 || !is.numeric(nmax) ) { return(df) }
+  df1 = df
+  onames = colnames(df)  # the original column names
+  cnames = onames  # the new column names, if needed start with the original ones
+  znames = paste("z",cnames, sep="")     # new column names added prefix 'z'. Those are non-numeric will not be used.
+  nadd = ifelse(append, nmax, 0) # add to the column index or replace the orig columns
+  j=1  # counting index
+  for( i in 1:nmax ) {
+    if ( is.numeric(df[,i]) && !( i %in% excl || onames[i] %in% excl ) ) { 
+      df1[,j+nadd] = scale(df[,i])
+      cnames = c(cnames, znames[i])
+      j=j+1
+    } else if ( !append ) { j=j+1
+    } # if append == 1 and (colunm non-numeric or excluded), do not advance j.
+  }
+  if (append) { colnames(df1) <- cnames }
+  return(df1)
+}
+# sample
+# loadPkg("ISLR")
+# HittersClean = subset(Hitters, Salary != "NA")
+# tmp = uzscale(HittersClean,0,c(2,"Salary") )
+# detach("package:ISLR", unload = T)
+```
+
+
+```{r data clean}
+kc_house_data <- read.csv('kc_house_data.csv')
+colnames(kc_house_data)
+
+kc_house_data <- subset(kc_house_data, select = -c(1,2, 9, 10, 17, 18, 19, 20, 21))
+kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms != 0)
+kc_house_data <- subset(kc_house_data, kc_house_data$bathrooms != 0)
+kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms < 30)
+kc_house_data <-  drop_na(kc_house_data)
+# kc_house_data$condition <- as.factor(kc_house_data$condition)
+# kc_house_data$grade <- as.factor(kc_house_data$grade)
+colnames(kc_house_data)
+nrow(kc_house_data)
+```
+
+```{r}
+loadPkg("ISLR")
+house_unscale = uzscale(kc_house_data)
+house_unscale
+x=model.matrix(price~.,house_unscale)[,-1]
+y=house_unscale$price
+loadPkg("glmnet")
+grid=10^seq(10,-2,length=100) # prepare log scale grid for λ values, from 10^10 to 10^-2, in 100 segments
+ridge.mod=glmnet(x,y,alpha=0,lambda=grid) # build the ridge model. (alpha is elastic-net mixing parameter, between 0 and 1. Ridge is 0, Lasso is 1)
+dim(coef(ridge.mod))  # same as dim(coefficients(ridge.mod)), is the dimensions of all the models (100 of them), and the dimension is here: 20x100
+plot(ridge.mod)    # Draw plot of coefficients
+colnames(house_unscale)
+```
+
+The glmnet( ) function creates 100 models, with our choice of 100 $\lambda$ values. Each model coefficients are stored in the object we named: ridge.mod  
+There are 20 coefficients for each model. The 100 $\lambda$ values are chosen from 0.02 ($10^{-2}$) to $10^{10}$, essentially covering the ordinary least square model ($\lambda$ = 0), and the null/constant 
+model ($\lambda$ approach infinity).
+
+
+```{r }
+ridge.mod$lambda[50] # 11498
+coef(ridge.mod)[,50]
+sqrt(sum(coef(ridge.mod)[-1,50]^2)) # 0.000155
+ridge.mod$lambda[60] # 705
+coef(ridge.mod)[,60] 
+sqrt(sum(coef(ridge.mod)[-1,60]^2))  # 0.0025
+
+```
+
+```{r}
+predict(ridge.mod,s=50,type="coefficients")[1:12,]
+```
+
+
+Let us split the data into training and test set, so that we can estimate test errors. The split will be used here for Ridge and later for Lasso regression. 
+
+```{r, warning=F}
+loadPkg("dplyr")
+house_unscale
+set.seed(1)
+train = house_unscale %>% sample_frac(0.5)
+test = house_unscale %>% setdiff(train)
+
+x_train = model.matrix(price~., train)[,-1]
+x_test = model.matrix(price~., test)[,-1]
+
+y_train = train %>% select(price) %>% unlist() # %>% as.numeric()
+y_test = test %>% select(price) %>% unlist() # %>% as.numeric()
+
+
+```
+
+The test set mean-squared-error MSE is 0.55 (remember that we are using standardized scores) for $\lambda = 4$. 
+
+```{r}
+ridge.mod=glmnet(x_train,y_train,alpha=0,lambda=grid, thresh=1e-12)
+ridge.pred=predict(ridge.mod,s=4,newx=x_test)
+mean((ridge.pred-y_test)^2)
+```
+
+
+On the other hand, for the null model ($\lambda$ approach infinity), the test MSE can be found to be 0.95. So $\lambda = 4$ reduces the variance by about half at the expense of the bias.
+
+```{r}
+mean((mean(y_train)-y_test)^2) # the test set MSE
+```
+
+We could have also used a large $\lambda$ value to find the MSE for the null model. These two methods yield essentially the same answer of 0.95.
+```{r}
+ridge.pred=predict(ridge.mod,s=1e10,newx=x_test)
+mean((ridge.pred-y_test)^2)
+```
+
+Now for the other extreme speical case of small $\lambda$, which is the ordinary least square (OLS) model. We can first use the ridge regression result to predict the $\lambda$ =0 case. The MSE found to be 0.495 that way. 
+
+```{r}
+ridge.pred = predict(ridge.mod, s = 0, newx = x_test)
+mean((ridge.pred - y_test)^2)
+predict(ridge.mod, s = 0, type="coefficients")[1:12,]
+```
+
+We can also build the OLS model directly, and calculate the MSE.
+```{r}02
+5
+train
+ols.mod = lm(price~., data = train)
+summary(ols.mod)
+mean(residuals(ols.mod)^2) # 0.507
+```
+
+
+## Use Cross-validation
+
+There is a built-in cross-validation method with glmnet, which will select the minimal $\lambda$ value.
+
+```{r}
+# set.seed(1)
+cv.out=cv.glmnet(x_train,y_train,alpha=0)  # Fit ridge regression model on training data
+plot(cv.out)
+bestlam = cv.out$lambda.min  # Select lamda that minimizes training MSE
+bestlam
+```
+
+```{r}
+ridge.pred=predict(ridge.mod,s=bestlam,newx=x_test)
+mean((ridge.pred-y_test)^2)
+out=glmnet(x,y,alpha=0)
+predict(out,type="coefficients",s=bestlam)[1:12,]
+```
+The first verticle dotted line is where the lowest MSE is. The second verticle dotted line is within one standard error. The labels of above the graph shows how many non-zero coefficients in the model.
+
+# The Lasso
+
+The same functino glmnet( ) with alpha set to 1 will build the Lasso regression model. 
+
+```{r}
+lasso.mod=glmnet(x_train,y_train,alpha=1,lambda=grid)
+plot(lasso.mod)
+set.seed(1)
+cv.out=cv.glmnet(x_train,y_train,alpha=1)
+plot(cv.out)
+```
+Here, we see that the lowest MSE is when $\lambda$ appro = 0.041. It has 6 non-zero coefficients. 
+
+```{r}
+bestlam=cv.out$lambda.min
+lasso.pred=predict(lasso.mod,s=bestlam,newx=x_test)
+mean((lasso.pred-y_test)^2)
+out = glmnet(x, y, alpha = 1, lambda = grid) # Fit lasso model on full dataset
+lasso_coef = predict(out, type = "coefficients", s = bestlam)[1:12,] # Display coefficients using λ chosen by CV
+lasso_coef
+lasso_coef[lasso_coef!=0]
+```
+
+```{r}
+lasLin <- lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot+floors+condition+grade+sqft_basement+yr_built+yr_renovated, data = kc_house_data)
+summary(lasLin)
+vif(lasLin)
+```

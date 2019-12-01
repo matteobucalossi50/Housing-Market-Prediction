@@ -43,7 +43,7 @@ loadPkg('DT')
 loadPkg('plotly')
 loadPkg('rmdformats')
 loadPkg('class')
-kc_house_data <- data.frame(read_csv("~/Downloads/kc_house_data.csv"))
+kc_house_data <- data.frame(read_csv("kc_house_data.csv"))
 kc_house_data <- subset(kc_house_data, select = -c(9, 10))
 kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms != 0)
 kc_house_data <- subset(kc_house_data, kc_house_data$bathrooms != 0)
@@ -175,7 +175,7 @@ kNN_acc
 
 # Trees
 
-```{r base_lib, include=FALSE}
+```{r lib, include=FALSE}
 loadPkg("dplyr")
 loadPkg("tidyr")
 loadPkg("tidyverse")
@@ -293,7 +293,7 @@ Plotting the error versus the size of trees, we can see that the optimal pruned 
 
 ## Testing model 
 
-```{r split, echo=FALSE}
+```{r splittree, echo=FALSE}
 fold <- floor(runif(nrow(kc_house_data),1,11)) 
   kc_house_data$fold <- fold
 test.set <- kc_house_data[kc_house_data$fold == 1,] 
@@ -316,7 +316,7 @@ min(tree.pred.seq$size[opt.trees])
 
 Building the tress on training dataset, we obtain a slighlty different tree pruned to 5 leaves, which splits data on grade first and then sqft_living. The plot of errors versus size also points out an optimal tree at 34 nodes.
 
-```{r pred, echo=FALSE}
+```{r predtree, echo=FALSE}
 treepr.pred <- prune.tree(tree.pred, best = 5, newdata = test.set) #evaluates on test data
 treepr.pred
 plot(treepr.pred) 
@@ -337,7 +337,7 @@ A regression random forest on all the predictors variables for price leads to 50
 
 # PCA
 
-```{r include=FALSE}
+```{r libpca, include=FALSE}
 library("dplyr")
 library("tidyr")
 library("tidyverse")
@@ -351,25 +351,25 @@ library("pls")
 library("magrittr")
 ```
 
-```{r}
+```{r lod}
 house <- data.frame(read.csv("kc_house_data.csv", header = TRUE))
 str(house)
 ```
 
 ##subset data 
-```{r}
+```{r subs}
 house2 <- subset(house,select = -c(id,date,waterfront,view,zipcode,lat,long,sqft_living15,sqft_lot15,yr_renovated))
 str(house2)
 ```
 ##All numeric variables. 
 
-```{r}
+```{r nas}
 sum(is.na(house2))
 ```
 
 
 
-```{r}
+```{r cor}
 corx=cor(house2[,-1])
 corx
 ```
@@ -379,18 +379,18 @@ corx
 ##Here we have 10 variables which are correlated and we want to reduce the number of them, pick up the important ones.
 
 ##PCA part,scale=T normalize the variables becuase they have different scales.
-```{r}
+```{r pca}
 prin_comp <- prcomp(scale(house2[,-1]))
 summary(prin_comp)
 prin_comp$center ##output the mean of variables
 prin_comp$scale ##output the sd of variables
 ```
 
-```{r}
+```{r rot}
 prin_comp$rotation
 ```
 
-```{r}
+```{r eig}
 fviz_eig(prin_comp)
 ```
 
@@ -398,17 +398,17 @@ fviz_eig(prin_comp)
 
 
 
-```{r}
+```{r bip}
 biplot(prin_comp, scale = 0)
 ##The first principle component looks like sqft_above, the second looks like sqft_basement)
 ```
 
-```{r}
+```{r bip2}
 biplot(prin_comp,6:7, scale =0)
 ```
 
 
-```{r}
+```{r pve}
 pr.var <- (prin_comp$sdev^2)
 pve <- pr.var/sum(pr.var)
 plot(cumsum(pve), xlab="Principal Component (standardized)", ylab ="Cumulative Proportion of Variance Explained",ylim=c(0,1),type="b")
@@ -419,19 +419,19 @@ plot(cumsum(pve), xlab="Principal Component (standardized)", ylab ="Cumulative P
 
 ##Predicting use pca
 
-```{r}
+```{r predpca}
 houseprice <- prin_comp$x
 modHouses <- lm(house2$price ~ houseprice[,1:7])
 summary(modHouses)
 ```
 
-```{r}
+```{r fullpca}
 fullmodel=lm(price~.-sqft_basement,data=house2)
 summary(fullmodel)
 ```
 
 
-```{r}
+```{r plotpca}
 par(mfrow = c(1,2))
 plot(house2$price, predict(modHouses), xlab = "actual price", ylab = "Predicted price", main = "PCR", abline(a = 0, b = 1, col = "red"))
 plot(house2$price, predict(fullmodel), xlab = "actual price", ylab = "Predicted price", main = "Full model", abline(a = 0, b = 1, col = "red"))
@@ -443,7 +443,7 @@ plot(house2$price, predict(fullmodel), xlab = "actual price", ylab = "Predicted 
 
 # Ridge and Lasso 
 
-```{r base_lib, include=FALSE}
+```{r baselib, include=FALSE}
 loadPkg("dplyr")
 loadPkg("tidyr")
 loadPkg("tidyverse")
@@ -524,7 +524,7 @@ nrow(kc_house_data)
 
 ## The Ridge 
 
-```{r}
+```{r splitridge}
 loadPkg("ISLR")
 house_unscale = uzscale(kc_house_data)
 house_unscale
@@ -543,7 +543,7 @@ There are 20 coefficients for each model. The 100 $\lambda$ values are chosen fr
 model ($\lambda$ approach infinity).
 
 
-```{r }
+```{r ridge}
 ridge.mod$lambda[50] # 11498
 coef(ridge.mod)[,50]
 sqrt(sum(coef(ridge.mod)[-1,50]^2)) # 0.000155
@@ -552,14 +552,14 @@ coef(ridge.mod)[,60]
 sqrt(sum(coef(ridge.mod)[-1,60]^2))  # 0.0025
 ```
 
-```{r}
+```{r predridge}
 predict(ridge.mod,s=50,type="coefficients")[1:12,]
 ```
 
 
 Let us split the data into training and test set, so that we can estimate test errors. The split will be used here for Ridge and later for Lasso regression. 
 
-```{r, warning=F}
+```{r splitrid, warning=F}
 loadPkg("dplyr")
 house_unscale
 set.seed(1)
@@ -573,7 +573,7 @@ y_test = test %>% select(price) %>% unlist() # %>% as.numeric()
 
 The test set mean-squared-error MSE is 0.55 (remember that we are using standardized scores) for $\lambda = 4$. 
 
-```{r}
+```{r predrid}
 ridge.mod=glmnet(x_train,y_train,alpha=0,lambda=grid, thresh=1e-12)
 ridge.pred=predict(ridge.mod,s=4,newx=x_test)
 mean((ridge.pred-y_test)^2)
@@ -582,19 +582,19 @@ mean((ridge.pred-y_test)^2)
 
 On the other hand, for the null model ($\lambda$ approach infinity), the test MSE can be found to be 0.95. So $\lambda = 4$ reduces the variance by about half at the expense of the bias.
 
-```{r}
+```{r mseridge}
 mean((mean(y_train)-y_test)^2) # the test set MSE
 ```
 
 We could have also used a large $\lambda$ value to find the MSE for the null model. These two methods yield essentially the same answer of 0.95.
-```{r}
+```{r mseridge2}
 ridge.pred=predict(ridge.mod,s=1e10,newx=x_test)
 mean((ridge.pred-y_test)^2)
 ```
 
 Now for the other extreme speical case of small $\lambda$, which is the ordinary least square (OLS) model. We can first use the ridge regression result to predict the $\lambda$ =0 case. The MSE found to be 0.495 that way. 
 
-```{r}
+```{r mseridg3}
 ridge.pred = predict(ridge.mod, s = 0, newx = x_test)
 mean((ridge.pred - y_test)^2)
 predict(ridge.mod, s = 0, type="coefficients")[1:12,]
@@ -614,7 +614,7 @@ mean(residuals(ols.mod)^2) # 0.507
 
 There is a built-in cross-validation method with glmnet, which will select the minimal $\lambda$ value.
 
-```{r}
+```{r cvridge}
 # set.seed(1)
 cv.out=cv.glmnet(x_train,y_train,alpha=0)  # Fit ridge regression model on training data
 plot(cv.out)
@@ -622,7 +622,7 @@ bestlam = cv.out$lambda.min  # Select lamda that minimizes training MSE
 bestlam
 ```
 
-```{r}
+```{r cvridpred}
 ridge.pred=predict(ridge.mod,s=bestlam,newx=x_test)
 mean((ridge.pred-y_test)^2)
 out=glmnet(x,y,alpha=0)
@@ -634,7 +634,7 @@ The first verticle dotted line is where the lowest MSE is. The second verticle d
 
 The same functino glmnet( ) with alpha set to 1 will build the Lasso regression model. 
 
-```{r}
+```{r lasso}
 lasso.mod=glmnet(x_train,y_train,alpha=1,lambda=grid)
 plot(lasso.mod)
 set.seed(1)
@@ -643,7 +643,7 @@ plot(cv.out)
 ```
 Here, we see that the lowest MSE is when $\lambda$ appro = 0.041. It has 6 non-zero coefficients. 
 
-```{r}
+```{r lassocoef} 
 bestlam=cv.out$lambda.min
 lasso.pred=predict(lasso.mod,s=bestlam,newx=x_test)
 mean((lasso.pred-y_test)^2)
@@ -653,7 +653,7 @@ lasso_coef
 lasso_coef[lasso_coef!=0]
 ```
 
-```{r}
+```{r lmlasso}
 lasLin <- lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot+floors+condition+grade+sqft_basement+yr_built+yr_renovated, data = kc_house_data)
 summary(lasLin)
 vif(lasLin)

@@ -88,11 +88,11 @@ tree1 <- tree(log(price) ~ bedrooms + bathrooms + sqft_living + sqft_lot + floor
 summary(tree1)
 ```
 
-The tree built on all the features used as predictors (namely excluding id, date, geographic variables and sqft_living15 and sqft_lot15) for price, presents 3 termindal nodes and a mean squared error of 0.12.
+The tree built on all the features used as predictors (namely excluding id, date, geographic variables and sqft_living15 and sqft_lot15) for price, presents 9 termindal nodes and a mean squared error of 0.12.
 
 ```{r plott, echo=FALSE}
 plot(tree1) 
-text(tree1,cex=0.75)
+text(tree1,cex=0.75, digits=3)
 ```
 
 We can see that the algorithm splits the data using grade, yr_built and sqft_living. As expected, if grade is better and sqft_living are larger, price would be higher. While if grade is lower and houses get older and smaller, price would then be likely lower.
@@ -114,11 +114,11 @@ Using the package rpart, we can build a tree that provides a similar result but 
 ```{r maptree, echo=FALSE}
 treefit = tree(log(price) ~ long+lat,data=kc_house_data)
 plot(treefit)
-text(treefit, cex=0.75)
+text(treefit, cex=0.75, digits = 3)
 price.deciles = quantile(kc_house_data$price,0:10/10)
 cut.prices = cut(kc_house_data$price,price.deciles,include.lowest=TRUE)
 plot(kc_house_data$long,kc_house_data$lat,col=grey(10:2/11)[cut.prices],pch=20,xlab="Longitude",ylab="Latitude")
-partition.tree(treefit,ordvars=c("long","lat"),add=TRUE)
+partition.tree(treefit,ordvars=c("long","lat"),add=TRUE, col = 'red')
 ```
 
 ## Prune tree

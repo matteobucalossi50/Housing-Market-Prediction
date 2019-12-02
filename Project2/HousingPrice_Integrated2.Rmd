@@ -539,7 +539,7 @@ colnames(house_unscale)
 ```
 
 The glmnet( ) function creates 100 models, with our choice of 100 $\lambda$ values. Each model coefficients are stored in the object we named: ridge.mod  
-There are 20 coefficients for each model. The 100 $\lambda$ values are chosen from 0.02 ($10^{-2}$) to $10^{10}$, essentially covering the ordinary least square model ($\lambda$ = 0), and the null/constant 
+There are 12 coefficients for each model. The 100 $\lambda$ values are chosen from 0.02 ($10^{-2}$) to $10^{10}$, essentially covering the ordinary least square model ($\lambda$ = 0), and the null/constant 
 model ($\lambda$ approach infinity).
 
 
@@ -565,10 +565,12 @@ house_unscale
 set.seed(1)
 train = house_unscale %>% sample_frac(0.5)
 test = house_unscale %>% setdiff(train)
+
 x_train = model.matrix(price~., train)[,-1]
 x_test = model.matrix(price~., test)[,-1]
-y_train = train %>% select(price) %>% unlist() # %>% as.numeric()
-y_test = test %>% select(price) %>% unlist() # %>% as.numeric()
+
+y_train = train %>% dplyr::select(price) %>% unlist() # %>% as.numeric()
+y_test = test %>% dplyr::select(price) %>% unlist() # %>% as.numeric()
 ```
 
 The test set mean-squared-error MSE is 0.55 (remember that we are using standardized scores) for $\lambda = 4$. 
@@ -586,13 +588,13 @@ On the other hand, for the null model ($\lambda$ approach infinity), the test MS
 mean((mean(y_train)-y_test)^2) # the test set MSE
 ```
 
-We could have also used a large $\lambda$ value to find the MSE for the null model. These two methods yield essentially the same answer of 0.95.
+We could have also used a large $\lambda$ value to find the MSE for the null model. These two methods yield essentially the same answer of 0.977.
 ```{r mseridge2}
 ridge.pred=predict(ridge.mod,s=1e10,newx=x_test)
 mean((ridge.pred-y_test)^2)
 ```
 
-Now for the other extreme speical case of small $\lambda$, which is the ordinary least square (OLS) model. We can first use the ridge regression result to predict the $\lambda$ =0 case. The MSE found to be 0.495 that way. 
+Now for the other extreme speical case of small $\lambda$, which is the ordinary least square (OLS) model. We can first use the ridge regression result to predict the $\lambda$ =0 case. The MSE found to be 0.368 that way. 
 
 ```{r mseridg3}
 ridge.pred = predict(ridge.mod, s = 0, newx = x_test)
@@ -601,8 +603,7 @@ predict(ridge.mod, s = 0, type="coefficients")[1:12,]
 ```
 
 We can also build the OLS model directly, and calculate the MSE.
-```{r}02
-5
+```{r}
 train
 ols.mod = lm(price~., data = train)
 summary(ols.mod)
@@ -641,7 +642,7 @@ set.seed(1)
 cv.out=cv.glmnet(x_train,y_train,alpha=1)
 plot(cv.out)
 ```
-Here, we see that the lowest MSE is when $\lambda$ appro = 0.041. It has 6 non-zero coefficients. 
+Here, we see that the lowest MSE is when $\lambda$ appro = 0.369. It has 10 non-zero coefficients. 
 
 ```{r lassocoef} 
 bestlam=cv.out$lambda.min

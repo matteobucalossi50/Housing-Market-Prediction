@@ -628,6 +628,10 @@ ridge.pred=predict(ridge.mod,s=bestlam,newx=x_test)
 mean((ridge.pred-y_test)^2)
 out=glmnet(x,y,alpha=0)
 predict(out,type="coefficients",s=bestlam)[1:12,]
+sst <- sum((y_test - mean(y_test))^2)
+sse <- sum((ridge.pred - y_test)^2)
+rsq <- 1 - sse / sst
+rsq
 ```
 The first verticle dotted line is where the lowest MSE is. The second verticle dotted line is within one standard error. The labels of above the graph shows how many non-zero coefficients in the model.
 

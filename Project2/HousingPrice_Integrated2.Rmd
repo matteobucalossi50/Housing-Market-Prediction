@@ -658,6 +658,13 @@ lasso_coef
 lasso_coef[lasso_coef!=0]
 ```
 
+```{r lasso R2}
+sst1 <- sum((y_test - mean(y_test))^2)
+sse1 <- sum((lasso.pred - y_test)^2)
+rsq1 <- 1 - sse1 / sst1
+rsq1
+```
+
 ```{r lmlasso}
 lasLin <- lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot+floors+condition+grade+sqft_basement+yr_built+yr_renovated, data = kc_house_data)
 summary(lasLin)

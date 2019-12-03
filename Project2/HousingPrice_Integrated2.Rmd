@@ -288,6 +288,8 @@ opt.trees = which(tree1.seq$dev == min(tree1.seq$dev)) # Positions of optimal (w
 min(tree1.seq$size[opt.trees]) # Size of smallest optimal tree
 
 prune.tree(tree1,best=5) # Returns best pruned tree with all data
+plot(prune.tree(tree1,best=5))
+text(prune.tree(tree1,best=5), cex=0.75, digits = 3)
 ```
 Plotting the error versus the size of trees, we can see that the optimal pruned tree (smallest tree minimizing the errors) would have 9 nodes.
 

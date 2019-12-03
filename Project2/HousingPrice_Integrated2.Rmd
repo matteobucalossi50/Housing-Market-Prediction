@@ -527,7 +527,6 @@ nrow(kc_house_data)
 ```{r splitridge}
 loadPkg("ISLR")
 house_unscale = uzscale(kc_house_data)
-house_unscale
 x=model.matrix(price~.,house_unscale)[,-1]
 y=house_unscale$price
 loadPkg("glmnet")
@@ -561,7 +560,6 @@ Let us split the data into training and test set, so that we can estimate test e
 
 ```{r splitrid, warning=F}
 loadPkg("dplyr")
-house_unscale
 set.seed(1)
 train = house_unscale %>% sample_frac(0.5)
 test = house_unscale %>% setdiff(train)
@@ -604,7 +602,6 @@ predict(ridge.mod, s = 0, type="coefficients")[1:12,]
 
 We can also build the OLS model directly, and calculate the MSE.
 ```{r}
-train
 ols.mod = lm(price~., data = train)
 summary(ols.mod)
 mean(residuals(ols.mod)^2) # 0.507

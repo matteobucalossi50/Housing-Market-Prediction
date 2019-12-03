@@ -20,7 +20,7 @@ loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.
 
 # KNN
 
-```{r loaddata}
+```{r loaddata, include=FALSE}
 loadPkg("readr")
 loadPkg("dplyr")
 loadPkg("tidyr")
@@ -467,7 +467,7 @@ loadPkg('rmdformats')
 loadPkg("glmnet")
 ```
 
-```{r uzscale_fcn }
+```{r uzscale_fcn, include=FALSE}
 uzscale <- function(df, append=0, excl=NULL) { 
   #' Standardize dataframe to z scores, safe for non-numeric variables. 
   #' ELo 201904 GWU DATS

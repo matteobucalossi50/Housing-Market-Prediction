@@ -528,6 +528,15 @@ nrow(kc_house_data)
 
 ```{r splitridge}
 loadPkg("ISLR")
+kc_house_data$bedrooms <- as.factor(kc_house_data$bedrooms)
+kc_house_data$bathrooms <- as.factor(kc_house_data$bathrooms)
+kc_house_data$floors <- as.factor(kc_house_data$floors)
+kc_house_data$condition <- as.factor(kc_house_data$condition)
+str(kc_house_data$condition)
+str(kc_house_data$grade)
+str(kc_house_data$bedrooms)
+str(kc_house_data$bathrooms)
+str(kc_house_data$floors)
 house_unscale = uzscale(kc_house_data)
 x=model.matrix(price~.,house_unscale)[,-1]
 y=house_unscale$price
@@ -554,7 +563,7 @@ sqrt(sum(coef(ridge.mod)[-1,60]^2))  # 0.0025
 ```
 
 ```{r predridge}
-predict(ridge.mod,s=50,type="coefficients")[1:12,]
+predict(ridge.mod,s=50,type="coefficients")[1:64,]
 ```
 
 
@@ -599,7 +608,7 @@ Now for the other extreme speical case of small $\lambda$, which is the ordinary
 ```{r mseridg3}
 ridge.pred = predict(ridge.mod, s = 0, newx = x_test)
 mean((ridge.pred - y_test)^2)
-predict(ridge.mod, s = 0, type="coefficients")[1:12,]
+predict(ridge.mod, s = 0, type="coefficients")[1:64,]
 ```
 
 We can also build the OLS model directly, and calculate the MSE.
@@ -626,7 +635,7 @@ bestlam
 ridge.pred=predict(ridge.mod,s=bestlam,newx=x_test)
 mean((ridge.pred-y_test)^2)
 out=glmnet(x,y,alpha=0)
-predict(out,type="coefficients",s=bestlam)[1:12,]
+predict(out,type="coefficients",s=bestlam)[1:64,]
 sst <- sum((y_test - mean(y_test))^2)
 sse <- sum((ridge.pred - y_test)^2)
 rsq <- 1 - sse / sst
@@ -652,7 +661,7 @@ bestlam=cv.out$lambda.min
 lasso.pred=predict(lasso.mod,s=bestlam,newx=x_test)
 mean((lasso.pred-y_test)^2)
 out = glmnet(x, y, alpha = 1, lambda = grid) # Fit lasso model on full dataset
-lasso_coef = predict(out, type = "coefficients", s = bestlam)[1:12,] # Display coefficients using λ chosen by CV
+lasso_coef = predict(out, type = "coefficients", s = bestlam)[1:64,] # Display coefficients using λ chosen by CV
 lasso_coef
 lasso_coef[lasso_coef!=0]
 ```

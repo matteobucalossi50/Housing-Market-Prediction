@@ -517,7 +517,8 @@ uzscale <- function(df, append=0, excl=NULL) {
 # detach("package:ISLR", unload = T)
 ```
 
-
+We first load the dataset and remove columns that would be used in the regression.
+Then drop the NA values from the dataset.
 ```{r data clean}
 kc_house_data <- read.csv('kc_house_data.csv')
 colnames(kc_house_data)
@@ -528,36 +529,39 @@ kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms < 30)
 kc_house_data <-  drop_na(kc_house_data)
 # kc_house_data$condition <- as.factor(kc_house_data$condition)
 # kc_house_data$grade <- as.factor(kc_house_data$grade)
-colnames(kc_house_data)
-nrow(kc_house_data)
+# colnames(kc_house_data)
+# nrow(kc_house_data)
 ```
 
-## The Ridge 
-
+### The Ridge 
+For our dataset, numbers of bedrooms, bathrooms, floors are categorical variables. So we transfer them into factors.
+Then we prepare log scale grid for λ values, from 10^10 to 10^-2, in 100 segments and build the ridge model.
+Afterwards, we draw plot of coefficients to see the overall trend. 
 ```{r splitridge}
 loadPkg("ISLR")
 kc_house_data$bedrooms <- as.factor(kc_house_data$bedrooms)
 kc_house_data$bathrooms <- as.factor(kc_house_data$bathrooms)
 kc_house_data$floors <- as.factor(kc_house_data$floors)
 kc_house_data$condition <- as.factor(kc_house_data$condition)
-str(kc_house_data$condition)
-str(kc_house_data$grade)
-str(kc_house_data$bedrooms)
-str(kc_house_data$bathrooms)
-str(kc_house_data$floors)
+kc_house_data$grade <- as.factor(kc_house_data$grade)
+# str(kc_house_data$condition)
+# str(kc_house_data$grade)
+# str(kc_house_data$bedrooms)
+# str(kc_house_data$bathrooms)
+# str(kc_house_data$floors)
 house_unscale = uzscale(kc_house_data)
 x=model.matrix(price~.,house_unscale)[,-1]
 y=house_unscale$price
 loadPkg("glmnet")
-grid=10^seq(10,-2,length=100) # prepare log scale grid for λ values, from 10^10 to 10^-2, in 100 segments
-ridge.mod=glmnet(x,y,alpha=0,lambda=grid) # build the ridge model. (alpha is elastic-net mixing parameter, between 0 and 1. Ridge is 0, Lasso is 1)
-dim(coef(ridge.mod))  # same as dim(coefficients(ridge.mod)), is the dimensions of all the models (100 of them), and the dimension is here: 20x100
-plot(ridge.mod)    # Draw plot of coefficients
-colnames(house_unscale)
+grid=10^seq(10,-2,length=100)
+ridge.mod=glmnet(x,y,alpha=0,lambda=grid)
+dim(coef(ridge.mod))
+plot(ridge.mod)
+# colnames(house_unscale)
 ```
 
 The glmnet( ) function creates 100 models, with our choice of 100 $\lambda$ values. Each model coefficients are stored in the object we named: ridge.mod  
-There are 12 coefficients for each model. The 100 $\lambda$ values are chosen from 0.02 ($10^{-2}$) to $10^{10}$, essentially covering the ordinary least square model ($\lambda$ = 0), and the null/constant 
+There are 55 coefficients for each model. The 100 $\lambda$ values are chosen from 0.02 ($10^{-2}$) to $10^{10}$, essentially covering the ordinary least square model ($\lambda$ = 0), and the null/constant 
 model ($\lambda$ approach infinity).
 
 
@@ -570,10 +574,15 @@ coef(ridge.mod)[,60]
 sqrt(sum(coef(ridge.mod)[-1,60]^2))  # 0.0025
 ```
 
+Because the ridge regression uses the "L2 norm", the coefficients are expected to be smaller when $\lambda$ is large. Our "mid-point" (the 50-th) of $\lambda$ equals to 11498, and the sum of squares of coefficients = 0.000155. Compared to the 60-th value (we have a decreasing sequence) $\lambda$ of = 705, we find the sum of squares of the coefficients to be 0.0025, about 16 times larger.
+
+The model although only has 100 different values of $\lambda$ recorded, we can use the predict function (in R basic stats library) for various different purpose, such as gettint the predicted coefficients for $\lambda$=50, for example.
+e
 ```{r predridge}
-predict(ridge.mod,s=50,type="coefficients")[1:64,]
+predict(ridge.mod,s=50,type="coefficients")[1:55,]
 ```
 
+### Train and Test sets
 
 Let us split the data into training and test set, so that we can estimate test errors. The split will be used here for Ridge and later for Lasso regression. 
 
@@ -590,46 +599,44 @@ y_train = train %>% dplyr::select(price) %>% unlist() # %>% as.numeric()
 y_test = test %>% dplyr::select(price) %>% unlist() # %>% as.numeric()
 ```
 
-The test set mean-squared-error MSE is 0.55 (remember that we are using standardized scores) for $\lambda = 4$. 
 
 ```{r predrid}
 ridge.mod=glmnet(x_train,y_train,alpha=0,lambda=grid, thresh=1e-12)
 ridge.pred=predict(ridge.mod,s=4,newx=x_test)
 mean((ridge.pred-y_test)^2)
 ```
-
-
-On the other hand, for the null model ($\lambda$ approach infinity), the test MSE can be found to be 0.95. So $\lambda = 4$ reduces the variance by about half at the expense of the bias.
+The test set mean-squared-error MSE is `r mean((ridge.pred-y_test)^2)` (remember that we are using standardized scores) for $\lambda = 4$. 
 
 ```{r mseridge}
 mean((mean(y_train)-y_test)^2) # the test set MSE
 ```
+On the other hand, for the null model ($\lambda$ approach infinity), the test MSE can be found to be `r mean((mean(y_train)-y_test)^2)`. So $\lambda = 4$ reduces the variance by about half at the expense of the bias.
 
-We could have also used a large $\lambda$ value to find the MSE for the null model. These two methods yield essentially the same answer of 0.977.
 ```{r mseridge2}
 ridge.pred=predict(ridge.mod,s=1e10,newx=x_test)
 mean((ridge.pred-y_test)^2)
 ```
-
-Now for the other extreme speical case of small $\lambda$, which is the ordinary least square (OLS) model. We can first use the ridge regression result to predict the $\lambda$ =0 case. The MSE found to be 0.368 that way. 
+We could have also used a large $\lambda$ value to find the MSE for the null model. These two methods yield essentially the same answer of `r mean((ridge.pred-y_test)^2)`.
 
 ```{r mseridg3}
 ridge.pred = predict(ridge.mod, s = 0, newx = x_test)
 mean((ridge.pred - y_test)^2)
-predict(ridge.mod, s = 0, type="coefficients")[1:64,]
+predict(ridge.mod, s = 0, type="coefficients")[1:55,]
 ```
 
-We can also build the OLS model directly, and calculate the MSE.
+Now for the other extreme speical case of small $\lambda$, which is the ordinary least square (OLS) model. We can first use the ridge regression result to predict the $\lambda$ =0 case. The MSE found to be `r mean((ridge.pred - y_test)^2)` that way. 
+
+We can also build the OLS model directly.
 ```{r}
 ols.mod = lm(price~., data = train)
 summary(ols.mod)
-mean(residuals(ols.mod)^2) # 0.507
+mean(residuals(ols.mod)^2)
 ```
-
+The MSE for OLS regression is `r mean(residuals(ols.mod)^2)`
 
 ### Use Cross-validation
 
-There is a built-in cross-validation method with glmnet, which will select the minimal $\lambda$ value.
+We use a built-in cross-validation method with glmnet, which will select the minimal $\lambda$ value.
 
 ```{r cvridge}
 # set.seed(1)
@@ -649,12 +656,12 @@ sse <- sum((ridge.pred - y_test)^2)
 rsq <- 1 - sse / sst
 rsq
 ```
-The first verticle dotted line is where the lowest MSE is. The second verticle dotted line is within one standard error. The labels of above the graph shows how many non-zero coefficients in the model.
+The first verticle dotted line is shows the lowest MSE is `r mean((ridge.pred-y_test)^2)`. The second verticle dotted line is within one standard error. Then we calcualte the R square value. The R square is `r rsq` for ridge model.
 
-## The Lasso
+### The Lasso
 
 The same functino glmnet( ) with alpha set to 1 will build the Lasso regression model. 
-
+Then draw the polt for different $\lambda$ values to see the overall trend.  
 ```{r lasso}
 lasso.mod=glmnet(x_train,y_train,alpha=1,lambda=grid)
 plot(lasso.mod)
@@ -662,7 +669,7 @@ set.seed(1)
 cv.out=cv.glmnet(x_train,y_train,alpha=1)
 plot(cv.out)
 ```
-Here, we see that the lowest MSE is when $\lambda$ appro = 0.369. It has 10 non-zero coefficients. 
+Here, we see that the lowest MSE is when $\lambda$ appro = 0.369. It has about 47 non-zero coefficients. 
 
 ```{r lassocoef} 
 bestlam=cv.out$lambda.min
@@ -680,12 +687,22 @@ sse1 <- sum((lasso.pred - y_test)^2)
 rsq1 <- 1 - sse1 / sst1
 rsq1
 ```
+Then calculate the R square of lasso regression which is `r rsq1`.  
 
+Lasso regression is also a good tool for features selection. So we build a linear model by using lasso to select variables.
 ```{r lmlasso}
 lasLin <- lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot+floors+condition+grade+sqft_basement+yr_built+yr_renovated, data = kc_house_data)
 summary(lasLin)
 vif(lasLin)
 ```
 
+The p-value of conditions are all lower than 0.05. Remove it from the model and rebuild.
+
+```{r lmlasso1}
+lasLin1 <- lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot+floors+grade+sqft_basement+yr_built+yr_renovated, data = kc_house_data)
+summary(lasLin1)
+vif(lasLin)
+```
+The R square is `r summary(lasLin1)$adj.r.squared` which is better than ridge and lasso regression.
 
 

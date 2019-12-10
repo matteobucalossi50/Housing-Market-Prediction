@@ -20,7 +20,7 @@ loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.
 
 # KNN
 
-```{r loaddata}
+```{r loaddata, include=FALSE}
 
 loadPkg("readr")
 loadPkg("dplyr")
@@ -285,14 +285,14 @@ tree1 <- tree(log(price) ~ bedrooms + bathrooms + sqft_living + sqft_lot + floor
 summary(tree1)
 ```
 
-The tree built on all the features used as predictors (namely excluding id, date, geographic variables and sqft_living15 and sqft_lot15) for price, presents 9 termindal nodes and a mean squared error of 0.12.
+The tree built on all the features used as predictors (excluding id, date, geographic variables and sqft_living15 and sqft_lot15) for price, and presents 9 terminal nodes and a mean squared error of 0.12.
 
 ```{r plott, echo=FALSE}
 plot(tree1) 
 text(tree1,cex=0.75, digits=3)
 ```
 
-We can see that the algorithm splits the data using grade, yr_built and sqft_living. As expected, if grade is better and sqft_living are larger, price would be higher. While if grade is lower and houses get older and smaller, price would then be likely lower.
+We can see that the algorithm splits the data using grade, yr_built and sqft_living. As expected, if grade is better and sqft_living are larger, price is higher. While if grade is lower and houses get older and smaller, price trends lower.
 As we used the log of price to predict price with this tree, we can see how the highest average of price in the farthest right leaf is `r exp(14.07)` dollars and the lowest average of price in the farthest left is `r exp(12.52)` dollars.
 
 ```{r tree2, echo=FALSE}
@@ -357,7 +357,7 @@ opt.trees = which(tree.pred.seq$dev == min(tree.pred.seq$dev))
 min(tree.pred.seq$size[opt.trees]) 
 ```
 
-Building the tress on training dataset, we obtain a slighlty different tree pruned to 5 leaves, which splits data on grade first and then sqft_living. The plot of errors versus size also points out an optimal tree at 34 nodes.
+Building the tress on the training dataset, we obtain a slightly different tree pruned to 5 leaves, which splits data on grade first and then sqft_living. The plot of errors versus size also points out an optimal tree at 34 nodes.
 
 ```{r predtree, echo=FALSE}
 treepr.pred <- prune.tree(tree.pred, best = 5, newdata = test.set) #evaluates on test data
@@ -366,7 +366,7 @@ plot(treepr.pred)
 text(treepr.pred,cex=0.75, digits=3)
 ```
 
-Evaluating this tree on test data, we can see how the trained model did a good job at predicting price for the dataset as errors and tree are almost identical.
+Evaluating this tree on test data, we can see how the trained model did a good job of predicting price for the dataset, as the errors and tree are almost identical.
 
 # Random Forest
 
@@ -375,11 +375,11 @@ ff1 <- randomForest(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + f
 ff1
 ```
 
-A regression random forest on all the predictors variables for price leads to 500 trees ensembled for 3 variables tried at each split, and eventually provides a 68.5% of variance explained and a MSE of 0.0875.
+A regression random forest on all the predictor variables for price leads to 500 trees for 3 variables tried at each split, and eventually provides 68.5% of the variance explained, and an MSE of 0.0875.
 
 
 # PCA
-Use principle component analysis to predict the house price. Choosing this method because there are too many variables and I did not know which one to use so I want to capture as most as possible information by the least variables. 
+Here, we use principle component analysis to predict house price. We chose this method because there are too many variables, and did not know which ones to use. We want to capture as much information as possible by the fewest number of variables. 
 
 ```{r libpca, include=FALSE}
 library("dplyr")
@@ -395,7 +395,7 @@ library("pls")
 library("magrittr")
 ```
 
-Firstly， I loaded the dataset into Rstudio, renamed it to house and took a look at the structure of the dataset.
+First, we loaded the dataset into Rstudio, renamed it "house" and took a look at the structure of the dataset.
 
 ```{r lod}
 house <- data.frame(read.csv("kc_house_data.csv", header = TRUE))
@@ -404,26 +404,26 @@ str(house)
 There are 21613 oberservations on 21 variables.
 
 ##subset data 
-I delete some unuseful variables which I think are uncorrelated to the house price like lattitude, longitude, the 15 neighborhoods' sqft_living , sqft_lot, the year of renovated, zipcode, date of record, id. Also there are serveral variables contain mostly 0 values so I also deleted them like view and waterfront. And then took a look at the dataset
+We deleted some unuseful variables which we presumed were uncorrelated to house price such as lattitude, longitude, the 15 neighborhoods' sqft_living , sqft_lot, the year of renovated, zipcode, date of record, and id. Also, there are several variables containing mostly 0 values, so we also deleted them (these include "view" and "waterfront"). We then took a look at the datset.
 
 ```{r subs}
 house2 <- subset(house,select = -c(id,date,waterfront,view,zipcode,lat,long,sqft_living15,sqft_lot15,yr_renovated))
 str(house2)
 ```
-There are 11 variables left and one variable is house which will be used as independent variable and all variables are numeric. 
+There are 11 variables left and one variable is house, which will be used as an independent variable. All variables are numeric. 
 
-Check if there are NA values.
+Next, we need to check if there are NA values in the dataset.
 ```{r nas}
 sum(is.na(house2))
 ```
-There is no NA values. 
+There are no NA values. 
 
 
 ```{r cor}
 corx=cor(house2[,-1])
 corx
 ```
-Took a look at the correlation of the 10 dependent variables and I found that they are all related, some ones are highly related. It shows me that very hard to pick which ones are important so I used PCA to reduce dimension. 
+Next, we took a look at the correlation of the 10 dependent variables, and we found that they are all related, and some are highly related. This demonstrates that it is difficult to determine which ones are important, so we used PCA to reduce dimensionality. 
 
 
 

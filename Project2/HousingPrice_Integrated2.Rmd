@@ -254,7 +254,7 @@ loadPkg('randomForest')
 loadPkg('leaps')
 ```
 
-## Loading Data and Clean
+## Loading and Cleaning the Data
 
 https://www.kaggle.com/harlfoxem/housesalesprediction/data
 
@@ -285,7 +285,7 @@ price.ln = log(kc_house_data$price)
 ```
 
 
-## Regression Tree
+# Regression Tree
 
 ```{r tree, echo=FALSE}
 tree1 <- tree(log(price) ~ bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=kc_house_data)
@@ -341,7 +341,7 @@ text(prune.tree(tree1,best=5), cex=0.75, digits = 3)
 ```
 Plotting the error versus the size of trees, we can see that the optimal pruned tree (smallest tree minimizing the errors) would have 9 nodes.
 
-## Testing model 
+## Testing the model 
 
 ```{r splittree, echo=FALSE}
 fold <- floor(runif(nrow(kc_house_data),1,11)) 
@@ -364,7 +364,7 @@ opt.trees = which(tree.pred.seq$dev == min(tree.pred.seq$dev))
 min(tree.pred.seq$size[opt.trees]) 
 ```
 
-Building the tress on the training dataset, we obtain a slightly different tree pruned to 5 leaves, which splits data on grade first and then sqft_living. The plot of errors versus size also points out an optimal tree at 34 nodes.
+Building the trees on the training dataset, we obtain a slightly different tree pruned to 5 leaves, which splits data on grade first and then sqft_living. The plot of errors versus size also points out an optimal tree at 34 nodes.
 
 ```{r predtree, echo=FALSE}
 treepr.pred <- prune.tree(tree.pred, best = 5, newdata = test.set) #evaluates on test data
@@ -436,7 +436,8 @@ Next, we took a look at the correlation of the 10 dependent variables, and we fo
 
 ## PCA part
 As the 10 variables have different scales, it is necessary to scale them before analysis. Performing PCA on un-normalized variables will heavily weight variables with high variances.
-## We used the prcomp function to perform PCA, and subsequently checked the mean and sd of the variables. Since we scaled the variables, the differences in mean and sd are not large. 
+
+We used the prcomp function to perform PCA, and subsequently checked the mean and sd of the variables. Since we scaled the variables, the differences in mean and sd are not large. 
 ```{r pca}
 prin_comp <- prcomp(scale(house2[,-1]))
 summary(prin_comp)
@@ -451,7 +452,7 @@ prin_comp$rotation
 ```
 We can see that sqft_above forms up nearly 43% of the first component. The second component consists mostly of sqft_basement, which hovers near 60%. 
 
-## We can visualize the variance explained by each component. We can see that the first component explains the most, while the subsequent ones explain less. 
+We can visualize the variance explained by each component. We can see that the first component explains the most, while the subsequent ones explain less. 
 ```{r eig}
 fviz_eig(prin_comp)
 ```

@@ -24,6 +24,39 @@ This paper continues our discussion on Seattle housing prices from our first pro
 
 Included in our discussion is some exploratory data analysis (EDA) from our first assignment, along with some new models, including KNN, ridge and lasso regression, random forest, PCA, PCR, and decision trees. Each model comes with its own advantages and disadvantages, and as such no single model offers total explanatory power. Our hope, however, is that the sum is greater than its parts.
 
+# EDA
+
+The following are excerpts and graphs from the EDA section of our previous report. We are including them here to remind the reader of our dataset's attributes, before we dive into the analysis.
+
+"A brief overview of the dataset yields the following observations for housing price: the minimum price is \$78,000, while the maximum is \$7,700,000 (quite a large range); the mean of the dataset is \$540,198 (indicating that the dataset is right-skewed, as further indicated by the histogram below); the standard deviation of the dataset is \$367,142; and the variance is 134,792,956,735 (quite large, indicating ["that the data points are very spread out from the mean, and from one another"](https://bit.ly/2MZ1cCn)."
+
+```{r price hist, echo=FALSE}
+hist(kc_house_data$price[kc_house_data$price<=2000000], xaxt="n", ylim = c(0,5000), col = heat.colors(20), main = "Housing Price Histogram, $0-$2M Only", xlab = "Housing Price ($)", cex.axis = .75)
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+
+```
+
+### Comparison of sqft living with price
+
+From the scatterplot, it's apparent that there is a relatively strong, positive correlation between housing price and living space (.70192, to be exact). That is, as living space increases, so does housing price. Note that a majority of the data points lie below 6,000 sqft, and below $2 million.
+
+```{r plot sqft living, echo=FALSE}
+plot(kc_house_data$sqft_living, kc_house_data$price, xaxt="n", yaxt="n", pch = 20, cex = .1, xlab = "Square Feet of Living Space", ylab = "Housing Price ($)", cex.axis = .75, main = "Housing Price vs. Living Space")
+abline(lm(kc_house_data$price ~ kc_house_data$sqft_living, data = kc_house_data), col = "orange")
+legend(x='topright', legend=paste('Correlation =',round(cor(kc_house_data$sqft_living, kc_house_data$price),5)))
+axis(side=1, at=axTicks(1), 
+     labels=formatC(axTicks(1), format="d", big.mark=','))
+axis(side=2, at=axTicks(2), 
+     labels=formatC(axTicks(2), format="d", big.mark=','))
+```
+
+Here we have a boxplot comparing "grade" with housing price. "Grade" represents an index from 1 to 13, with the lowest number representing poor construction and design. The trend is clear: construction and design grade correlate positively with housing price.
+
+```{r, echo=FALSE}
+ggplotly(ggplot(kc_house_data, aes(x=grade, y=price, fill=grade)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Grade (log)") + ylab("Housing Price ($)") + xlab("Apartment Grade") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')))
+
+```
 
 # KNN
 

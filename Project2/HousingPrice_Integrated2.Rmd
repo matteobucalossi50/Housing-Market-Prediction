@@ -18,6 +18,13 @@ options(scipen = 999)
 loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.packages(x,dep=T,repos="http://cran.us.r-project.org"); if(!require(x,character.only=T)) stop("Package not found") } }
 ```
 
+# Introduction
+
+This paper continues our discussion on Seattle housing prices from our first project. As mentioned in our earlier report, "Seattle boasts among 'hottest' housing markets in the country; as of [July 2018](https://bit.ly/2v5UMcn), Seattle 'led the nation in home price gains' for 21 straight months.'" Given this context, our basic SMART question remains the same: how can we predict house prices in Seattle?
+
+Included in our discussion is some exploratory data analysis (EDA) from our first assignment, along with some new models, including KNN, ridge and lasso regression, random forest, PCA, PCR, and decision trees. Each model comes with its own advantages and disadvantages, and as such no single model offers total explanatory power. Our hope, however, is that the sum is greater than its parts.
+
+
 # KNN
 
 ```{r loaddata, include=FALSE}

@@ -403,7 +403,7 @@ str(house)
 ```
 There are 21613 oberservations on 21 variables.
 
-##subset data 
+## Subset Data 
 We deleted some unuseful variables which we presumed were uncorrelated to house price such as lattitude, longitude, the 15 neighborhoods' sqft_living , sqft_lot, the year of renovated, zipcode, date of record, and id. Also, there are several variables containing mostly 0 values, so we also deleted them (these include "view" and "waterfront"). We then took a look at the datset.
 
 ```{r subs}
@@ -427,29 +427,29 @@ Next, we took a look at the correlation of the 10 dependent variables, and we fo
 
 
 
-##PCA part
-scale=T normalize the variables becuase they have different scales.As the 10 variable have different scales, it is necessary to scale them before analysis. Performing PCA on un-normalized variables will lead to insanely large loadings for variables with high variance.
-##Then use prcomp function to do the PCA. Checked the mean and sd of variables. As I scaled the variables, so the differences in mean and sd are not big. 
+## PCA part
+As the 10 variables have different scales, it is necessary to scale them before analysis. Performing PCA on un-normalized variables will heavily weight variables with high variances.
+## We used the prcomp function to perform PCA, and subsequently checked the mean and sd of the variables. Since we scaled the variables, the differences in mean and sd are not large. 
 ```{r pca}
 prin_comp <- prcomp(scale(house2[,-1]))
 summary(prin_comp)
 prin_comp$center ##output the mean of variables
 prin_comp$scale ##output the sd of variables
 ```
-We can see that with 7 components, there are 95% cumulative variances explained. 95% percentage is a normal for PCA, so I decided to use 7 components. 
+We can see that with 7 components, 95% of the variance is explained. 95% variance explained is normal for PCA, so I decided to use 7 components. 
 
-Take a look at how variables form up each component. 
+Let's take a look at how the variables form  each component. 
 ```{r rot}
 prin_comp$rotation
 ```
-We can see that sqft_above forms up nearly 43% of the first component which is the highest. For the second component, sqft_basement forms up mostly, which is nearly 60%. 
+We can see that sqft_above forms up nearly 43% of the first component. The second component consists mostly of sqft_basement, which hovers near 60%. 
 
-##We can visualize the variance explained by each component. We can see that the first component explains mostly, the later ones explain less. 
+## We can visualize the variance explained by each component. We can see that the first component explains the most, while the subsequent ones explain less. 
 ```{r eig}
 fviz_eig(prin_comp)
 ```
 
-We can visualize how each component formed up by different variables. However, the graph is very hard to see, not as easy to see as rotation report. 
+We can visualize how each component is formed by the different variables. However, the graph is very hard to see – much harder than the rotation vizualization. 
 ```{r bip}
 biplot(prin_comp, scale = 0)
 ##The first principle component looks like sqft_above, the second looks like sqft_basement)
@@ -459,7 +459,7 @@ biplot(prin_comp, scale = 0)
 biplot(prin_comp,6:7, scale =0)
 ```
 
-Visulize the cumulative proportions of variance, we can see that after 7 components, the curve becomes smooth. 
+Visualizing the cumulative proportions of variance, we can see that after 7 components, the curve becomes smooth. 
 ```{r pve}
 pr.var <- (prin_comp$sdev^2)
 pve <- pr.var/sum(pr.var)
@@ -467,37 +467,37 @@ plot(cumsum(pve), xlab="Principal Component (standardized)", ylab ="Cumulative P
 ```
 
 
-##Predicting use pca
-Finally, we can created a pcr model wth the 7 components. Actually, the PCR model is a linear model, so I used lm function to create it. 
+## Predicting using PCA
+Finally, we can created a PCR model wth the 7 components. Actually, the PCR model is a linear model, so we used the lm function to create it. 
 ```{r predpca}
 houseprice <- prin_comp$x
 modHouses <- lm(house2$price ~ houseprice[,1:7])
 summary(modHouses)
 ```
-We can see that there is 61.3% variance explained by the independent variable. I do not use accuracy as a scale to check whethere the model is good or not. The reason is that the difference between the house price is very large. So using accuracy to check the model is unreachable. 
+We can see that 61.3% of the variance is explained by the independent variables. We do not use accuracy to check whether the model is good or not – the reason being that the difference between the house prices is very large. So using accuracy to check the model would not make sense.
 
-I want to see how good the PCR model is, so I created a full linear model to compare. 
+We want to see how good the PCR model is, so we created a full linear model to compare it to. 
 ```{r fullpca}
 fullmodel=lm(price~.-sqft_basement,data=house2)
 summary(fullmodel)
 ```
-There is 61.8% variance explained by the independent variable in the full linear model. It is little better than the PCR model. 
+61.8% of the variance is explained by the independent variable in the full linear model. It is a bit better than the PCR model. 
+
+## PCR vs. Full Linear Model: A Comparison 
+
+The R^2 of the full model is 0.618, which is higher than PCR at 0.613. We can also see that both models underestimate the value of house prices over 4e+06.
 
 ```{r plotpca}
 par(mfrow = c(1,2))
 plot(house2$price, predict(modHouses), xlab = "actual price", ylab = "Predicted price", main = "PCR", abline(a = 0, b = 1, col = "red"))
 plot(house2$price, predict(fullmodel), xlab = "actual price", ylab = "Predicted price", main = "Full model", abline(a = 0, b = 1, col = "red"))
 ```
-#Create a picture to compare the PCR model with the full linear model. 
-#R^2 of full model is 0.618 which is higher than pcr which is 0.613
-#we can see that both models underestimate the value of house price over 4e+06
 
-
-# Limitations of the PCA 
-#There are few outliers of the price. I do not delete them because I think these high price are also important. 
-#The response variables must be numeric, even the grade and condition variables are actually catagorical. 
-#PCA relies on normality assumption
-#The components must be orthogonal (Sometimes consider that principal components are orthogonal to the others it's a restriction to find projections with the highest variance)
+## Limitations of PCA 
+There are a few price outliers. We did not delete them, however, because we think the high prices are important. 
+The response variables must be numeric, even the grade and condition variables are actually catagorical. 
+PCA relies on normality assumption
+The components must be orthogonal (Sometimes consider that principal components are orthogonal to the others it's a restriction to find projections with the highest variance)
 
 
 # Ridge and Lasso 
@@ -566,8 +566,7 @@ uzscale <- function(df, append=0, excl=NULL) {
 # detach("package:ISLR", unload = T)
 ```
 
-We first load the dataset and remove columns that would be used in the regression.
-Then drop the NA values from the dataset.
+We first load the dataset and remove columns that would be used in the regression. Then we drop the NA values from the dataset.
 ```{r data clean}
 kc_house_data <- read.csv('kc_house_data.csv')
 colnames(kc_house_data)
@@ -583,9 +582,9 @@ kc_house_data <-  drop_na(kc_house_data)
 ```
 
 ### The Ridge 
-For our dataset, numbers of bedrooms, bathrooms, floors are categorical variables. So we transfer them into factors.
-Then we prepare log scale grid for λ values, from 10^10 to 10^-2, in 100 segments and build the ridge model.
-Afterwards, we draw plot of coefficients to see the overall trend. 
+For our dataset, numbers of bedrooms, bathrooms, and floors are categorical variables, so we convert them into factors.
+Then we prepare a log scale grid for λ values, from 10^10 to 10^-2 in 100 segments, and then build the ridge model.
+Afterwards, we draw a plot of coefficients to see the overall trend. 
 ```{r splitridge}
 loadPkg("ISLR")
 kc_house_data$bedrooms <- as.factor(kc_house_data$bedrooms)
@@ -609,9 +608,8 @@ plot(ridge.mod)
 # colnames(house_unscale)
 ```
 
-The glmnet( ) function creates 100 models, with our choice of 100 $\lambda$ values. Each model coefficients are stored in the object we named: ridge.mod  
-There are 55 coefficients for each model. The 100 $\lambda$ values are chosen from 0.02 ($10^{-2}$) to $10^{10}$, essentially covering the ordinary least square model ($\lambda$ = 0), and the null/constant 
-model ($\lambda$ approach infinity).
+The glmnet( ) function creates 100 models, with our choice of 100 $\lambda$ values. Each model's coefficients are stored in the object we named: ridge.mod  
+There are 55 coefficients for each model. The 100 $\lambda$ values are chosen from 0.02 ($10^{-2}$) to $10^{10}$, essentially covering the ordinary least square model ($\lambda$ = 0), and the null/constant model ($\lambda$ approaches infinity).
 
 
 ```{r ridge}
@@ -623,17 +621,17 @@ coef(ridge.mod)[,60]
 sqrt(sum(coef(ridge.mod)[-1,60]^2))  # 0.0025
 ```
 
-Because the ridge regression uses the "L2 norm", the coefficients are expected to be smaller when $\lambda$ is large. Our "mid-point" (the 50-th) of $\lambda$ equals to 11498, and the sum of squares of coefficients = 0.000155. Compared to the 60-th value (we have a decreasing sequence) $\lambda$ of = 705, we find the sum of squares of the coefficients to be 0.0025, about 16 times larger.
+Because the ridge regression uses the "L2 norm", the coefficients are expected to be smaller when $\lambda$ is large. Our "midpoint" (the 50th percentile) of $\lambda$ equals 11,498, and the sum of squares of coefficients is 0.000155. Compared to the 60th percentile value (we have a decreasing sequence) $\lambda$ of 705, we find the sum of squares of the coefficients to be 0.0025, about 16 times larger.
 
-The model although only has 100 different values of $\lambda$ recorded, we can use the predict function (in R basic stats library) for various different purpose, such as gettint the predicted coefficients for $\lambda$=50, for example.
-e
+The model, however, only has 100 different values of $\lambda$ recorded, so we can use the predict function (part of the R basic stats library) for various different purposes, such as calculating the predicted coefficients for $\lambda$=50, for example.
+
 ```{r predridge}
 predict(ridge.mod,s=50,type="coefficients")[1:55,]
 ```
 
 ### Train and Test sets
 
-Let us split the data into training and test set, so that we can estimate test errors. The split will be used here for Ridge and later for Lasso regression. 
+Let us split the data into training and test sets, so that we can estimate test errors. The split will be used here for Ridge regression, and later for Lasso regression. 
 
 ```{r splitrid, warning=F}
 loadPkg("dplyr")
@@ -654,12 +652,12 @@ ridge.mod=glmnet(x_train,y_train,alpha=0,lambda=grid, thresh=1e-12)
 ridge.pred=predict(ridge.mod,s=4,newx=x_test)
 mean((ridge.pred-y_test)^2)
 ```
-The test set mean-squared-error MSE is `r mean((ridge.pred-y_test)^2)` (remember that we are using standardized scores) for $\lambda = 4$. 
+The test set mean squared error (MSE) is `r mean((ridge.pred-y_test)^2)`. (Keep in mind that we are using standardized scores for $\lambda = 4$.)
 
 ```{r mseridge}
 mean((mean(y_train)-y_test)^2) # the test set MSE
 ```
-On the other hand, for the null model ($\lambda$ approach infinity), the test MSE can be found to be `r mean((mean(y_train)-y_test)^2)`. So $\lambda = 4$ reduces the variance by about half at the expense of the bias.
+On the other hand, for the null model ($\lambda$ approaches infinity), the MSE can be found to be `r mean((mean(y_train)-y_test)^2)`. So $\lambda = 4$ reduces the variance by about half, at the expense of bias.
 
 ```{r mseridge2}
 ridge.pred=predict(ridge.mod,s=1e10,newx=x_test)
@@ -673,7 +671,7 @@ mean((ridge.pred - y_test)^2)
 predict(ridge.mod, s = 0, type="coefficients")[1:55,]
 ```
 
-Now for the other extreme speical case of small $\lambda$, which is the ordinary least square (OLS) model. We can first use the ridge regression result to predict the $\lambda$ =0 case. The MSE found to be `r mean((ridge.pred - y_test)^2)` that way. 
+Now for the other extreme special case of small $\lambda$, which is the ordinary least square (OLS) model. We can first use the ridge regression result to predict the $\lambda$ =0 case. The MSE was found to be `r mean((ridge.pred - y_test)^2)` using this result. 
 
 We can also build the OLS model directly.
 ```{r}
@@ -705,12 +703,12 @@ sse <- sum((ridge.pred - y_test)^2)
 rsq <- 1 - sse / sst
 rsq
 ```
-The first verticle dotted line is shows the lowest MSE is `r mean((ridge.pred-y_test)^2)`. The second verticle dotted line is within one standard error. Then we calcualte the R square value. The R square is `r rsq` for ridge model.
+The first vertical dotted line shows that the lowest MSE is `r mean((ridge.pred-y_test)^2)`. The second vertical dotted line is within one standard error. Then we calcualte the R squared value. R squared is `r rsq` for the ridge model.
 
 ### The Lasso
 
-The same functino glmnet( ) with alpha set to 1 will build the Lasso regression model. 
-Then draw the polt for different $\lambda$ values to see the overall trend.  
+The same function, glmnet( ), with alpha set to 1 will build the Lasso regression model. 
+Then we draw the plot for different $\lambda$ values to see the overall trend.  
 ```{r lasso}
 lasso.mod=glmnet(x_train,y_train,alpha=1,lambda=grid)
 plot(lasso.mod)
@@ -718,7 +716,7 @@ set.seed(1)
 cv.out=cv.glmnet(x_train,y_train,alpha=1)
 plot(cv.out)
 ```
-Here, we see that the lowest MSE is when $\lambda$ appro = 0.369. It has about 47 non-zero coefficients. 
+Here, we see that the lowest MSE is when $\lambda$ equals 0.369. It has about 47 non-zero coefficients. 
 
 ```{r lassocoef} 
 bestlam=cv.out$lambda.min
@@ -736,22 +734,22 @@ sse1 <- sum((lasso.pred - y_test)^2)
 rsq1 <- 1 - sse1 / sst1
 rsq1
 ```
-Then calculate the R square of lasso regression which is `r rsq1`.  
+We then calculate the R squared of lasso regression, which is `r rsq1`.  
 
-Lasso regression is also a good tool for features selection. So we build a linear model by using lasso to select variables.
+Lasso regression is also a good tool for feature selection. So we build a linear model by using lasso to select variables.
 ```{r lmlasso}
 lasLin <- lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot+floors+condition+grade+sqft_basement+yr_built+yr_renovated, data = kc_house_data)
 summary(lasLin)
 vif(lasLin)
 ```
 
-The p-value of conditions are all lower than 0.05. Remove it from the model and rebuild.
+The condition p-values are all lower than 0.05. We consequently remove them from the model and rebuild it.
 
 ```{r lmlasso1}
 lasLin1 <- lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot+floors+grade+sqft_basement+yr_built+yr_renovated, data = kc_house_data)
 summary(lasLin1)
 vif(lasLin)
 ```
-The R square is `r summary(lasLin1)$adj.r.squared` which is better than ridge and lasso regression.
+The R squared value is `r summary(lasLin1)$adj.r.squared`, which is better than what was achieved with ridge and lasso regression.
 
 

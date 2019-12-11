@@ -30,6 +30,28 @@ Included in our discussion is some exploratory data analysis (EDA) from our firs
 
 The following are excerpts and graphs from the EDA section of our previous report. We are including them here to remind the reader of our dataset's attributes, before we dive into the analysis.
 
+```{r base_lib, include=FALSE}
+loadPkg("dplyr")
+loadPkg("tidyr")
+loadPkg("tidyverse")
+loadPkg("ggplot2")
+loadPkg('ggmap')
+loadPkg('rjson')
+loadPkg('jsonlite')
+loadPkg('leaflet')
+loadPkg('grDevices')
+loadPkg('scales')
+loadPkg('RCurl')
+loadPkg('sp')
+loadPkg('geojsonio')
+loadPkg('lmtest')
+loadPkg("faraway")
+loadPkg("corrplot")
+loadPkg("modelr")
+loadPkg('DT')
+loadPkg('plotly')
+loadPkg('rmdformats')
+```
 ```{r loadd, echo=FALSE}
 kc_house_data <- read.csv("kc_house_data.csv")
 str(kc_house_data)
@@ -262,12 +284,12 @@ price_predict = knn(train = kc_house_data_train[, c("bedrooms", "bathrooms", "sq
 
 # View the output.
 str(price_predict)
-length(price_predict)
+#length(price_predict)
 table(price_predict)
 
 ```
 
-Now let's take a look at the results. Our KNN model classified housing price correctly about 74% of the time, or 3199 out of a possible 4319 test cases.
+Now let's take a look at the results. Our KNN model classified housing price correctly about 74% of the time, or 3199 out of a possible `r length(price_predict)` test cases.
 
 It misclassified 385 medium priced houses as "low", 661 low priced houses as "medium", 4 medium priced houses as "high", and 70 high priced houses "medium".
 
@@ -285,7 +307,7 @@ kNN_res = table(price_predict,
                 kc_house_data_test$`price`)
 
 kNN_res
-sum(kNN_res)  #<- the total is all the test examples
+#sum(kNN_res)  #<- the total is all the test examples
 
 # Select the true positives and true negatives by selecting
 # only the cells where the row and column names are the same.
@@ -294,10 +316,10 @@ kNN_res[row(kNN_res) == col(kNN_res)]
 # Calculate the accuracy rate by dividing the correct classifications
 # by the total number of classifications.
 kNN_acc = sum(kNN_res[row(kNN_res) == col(kNN_res)]) / sum(kNN_res)
-kNN_acc
-
 
 ```
+
+KNN results in an accuracy of `r kNN_acc` eventually. 
 
 # Tree Modeling
 
@@ -361,7 +383,7 @@ price.ln = log(kc_house_data$price)
 
 ## Regression Tree
 
-```{r tree, include==FALSE}
+```{r tree, include=FALSE}
 tree1 <- tree(log(price) ~ bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=kc_house_data)
 summary(tree1)
 ```
@@ -473,12 +495,12 @@ text(pfit, use.n=TRUE, all=TRUE, cex=.8)
 
 ```
 ```{r}
-treepr <- prune(tree.pred, best = 5, cp=.02) # Return best pruned tree with 5 leaves, evaluating error on training data
+treepr <- prune(fit, best = 5, cp=.02) # Return best pruned tree with 5 leaves, evaluating error on training data
 summary(treepr)
 plot(treepr) 
 text(treepr,cex=0.75, digits=3)
 
-tree.pred.seq <- prune(tree.pred, cp=.02)
+tree.pred.seq <- prune(treepr, cp=.02)
 plot(tree.pred.seq)
 tree.pred.seq$dev
 opt.trees = which(tree.pred.seq$dev == min(tree.pred.seq$dev)) 
@@ -489,7 +511,7 @@ Building the tress on training dataset, we obtain a slighlty different tree prun
 
 ```{r predtree, echo=FALSE}
 tree.pred <- rpart(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=train.set, cp=.02)
-treepr.pred <- prune.tree(tree.pred, best = 5, newdata = test.set) #evaluates on test data
+treepr.pred <- prune(tree.pred, best = 5, newdata = test.set, cp = 0.02) #evaluates on test data
 treepr.pred
 plot(treepr.pred) 
 text(treepr.pred,cex=0.75, digits=3)
@@ -554,7 +576,7 @@ str(house2)
 There are 11 variables left and one variable is house, which will be used as an independent variable. All variables are numeric. 
 
 Next, we need to check if there are NA values in the dataset.
-```{r nas, include=TRUE}
+```{r nas, include=FALSE}
 house2 <- drop_na(house2)
 sum(is.na(house2))
 ```
@@ -749,16 +771,12 @@ The glmnet( ) function creates 100 models, with our choice of 100 $\lambda$ valu
 There are 55 coefficients for each model. The 100 $\lambda$ values are chosen from 0.02 ($10^{-2}$) to $10^{10}$, essentially covering the ordinary least square model ($\lambda$ = 0), and the null/constant model ($\lambda$ approaches infinity).
 
 
-```{r ridge, echo=FALSE}
-ridge.mod$lambda[50] # 11498
+```{r ridge, include=FALSE}
 coef(ridge.mod)[,50]
-sqrt(sum(coef(ridge.mod)[-1,50]^2)) # 0.000155
-ridge.mod$lambda[60] # 705
 coef(ridge.mod)[,60] 
-sqrt(sum(coef(ridge.mod)[-1,60]^2))  # 0.0025
 ```
 
-Because the ridge regression uses the "L2 norm", the coefficients are expected to be smaller when $\lambda$ is large. Our "midpoint" (the 50th percentile) of $\lambda$ equals 11,498, and the sum of squares of coefficients is 0.000155. Compared to the 60th percentile value (we have a decreasing sequence) $\lambda$ of 705, we find the sum of squares of the coefficients to be 0.0025, about 16 times larger.
+Because the ridge regression uses the "L2 norm", the coefficients are expected to be smaller when $\lambda$ is large. Our "midpoint" (the 50th percentile) of $\lambda$ equals `r ridge.mod$lambda[50]`, and the sum of squares of coefficients is `r sqrt(sum(coef(ridge.mod)[-1,50]^2))`. Compared to the 60th percentile value (we have a decreasing sequence) $\lambda$ of `r ridge.mod$lambda[60]`, we find the sum of squares of the coefficients to be `r sqrt(sum(coef(ridge.mod)[-1,60]^2))`, about 16 times larger.
 
 The model, however, only has 100 different values of $\lambda$ recorded, so we can use the predict function (part of the R basic stats library) for various different purposes, such as calculating the predicted coefficients for $\lambda$=50, for example.
 
@@ -787,18 +805,16 @@ y_test = test %>% dplyr::select(price) %>% unlist() # %>% as.numeric()
 ```{r predrid, echo=FALSE}
 ridge.mod=glmnet(x_train,y_train,alpha=0,lambda=grid, thresh=1e-12)
 ridge.pred=predict(ridge.mod,s=4,newx=x_test)
-mean((ridge.pred-y_test)^2)
 ```
 The test set mean squared error (MSE) is `r mean((ridge.pred-y_test)^2)`. (Keep in mind that we are using standardized scores for $\lambda = 4$.)
 
-```{r mseridge, echo=FALSE}
+```{r mseridge, include=FALSE}
 mean((mean(y_train)-y_test)^2) # the test set MSE
 ```
 On the other hand, for the null model ($\lambda$ approaches infinity), the MSE can be found to be `r mean((mean(y_train)-y_test)^2)`. So $\lambda = 4$ reduces the variance by about half, at the expense of bias.
 
 ```{r mseridge2, echo=FALSE}
 ridge.pred=predict(ridge.mod,s=1e10,newx=x_test)
-mean((ridge.pred-y_test)^2)
 ```
 We could have also used a large $\lambda$ value to find the MSE for the null model. These two methods yield essentially the same answer of `r mean((ridge.pred-y_test)^2)`.
 
@@ -814,7 +830,6 @@ We can also build the OLS model directly.
 ```{r, echo=FALSE}
 ols.mod = lm(price~., data = train)
 summary(ols.mod)
-mean(residuals(ols.mod)^2)
 ```
 The MSE for OLS regression is `r mean(residuals(ols.mod)^2)`
 
@@ -826,9 +841,9 @@ We use a built-in cross-validation method with glmnet, which will select the min
 # set.seed(1)
 cv.out=cv.glmnet(x_train,y_train,alpha=0)  # Fit ridge regression model on training data
 plot(cv.out)
-bestlam = cv.out$lambda.min  # Select lamda that minimizes training MSE
-bestlam
 ```
+
+The minimal $\lambda$ value minimizing training MSE results to be `r cv.out$lambda.min` in this case.
 
 ```{r cvridpred, echo=FALSE}
 ridge.pred=predict(ridge.mod,s=bestlam,newx=x_test)
@@ -838,7 +853,6 @@ predict(out,type="coefficients",s=bestlam)[1:64,]
 sst <- sum((y_test - mean(y_test))^2)
 sse <- sum((ridge.pred - y_test)^2)
 rsq <- 1 - sse / sst
-rsq
 ```
 The first vertical dotted line shows that the lowest MSE is `r mean((ridge.pred-y_test)^2)`. The second vertical dotted line is within one standard error. Then we calculate the R squared value. R squared is `r rsq` for the ridge model.
 
@@ -869,7 +883,6 @@ lasso_coef[lasso_coef!=0]
 sst1 <- sum((y_test - mean(y_test))^2)
 sse1 <- sum((lasso.pred - y_test)^2)
 rsq1 <- 1 - sse1 / sst1
-rsq1
 ```
 We then calculate the R squared of lasso regression, which is `r rsq1`.  
 
@@ -897,7 +910,7 @@ In the end, each of our models comes with its advantages and disadvantages. Alth
 
 # Bibliography
 
-https://www.kaggle.com/harlfoxem/housesalesprediction/data
+Dataset available: https://www.kaggle.com/harlfoxem/housesalesprediction/data
 
 Perry, M. J. (2016, June 5). New US homes today are 1,000 square feet larger than in 1973 and living space per person has nearly doubled. Retrieved from https://www.aei.org/carpe-diem/new-us-homes-today-are-1000-square-feet-larger-than-in-1973-and-living-space-per-person-has-nearly-doubled/
 

@@ -18,6 +18,10 @@ options(scipen = 999)
 loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.packages(x,dep=T,repos="http://cran.us.r-project.org"); if(!require(x,character.only=T)) stop("Package not found") } }
 ```
 
+https://www.kaggle.com/harlfoxem/housesalesprediction/data
+
+https://github.com/matteobucalossi50/DATS6101_Project
+
 # Introduction
 
 This paper continues our discussion on Seattle housing prices from our first project. As mentioned in our earlier report, "Seattle boasts among 'hottest' housing markets in the country; as of [July 2018](https://bit.ly/2v5UMcn), Seattle 'led the nation in home price gains' for 21 straight months.'" Given this context, our basic SMART question remains the same: how can we predict house prices in Seattle?
@@ -105,7 +109,7 @@ kc_house_data$grade <- as.factor(kc_house_data$grade)
 
 Here, we convert pass "price" through a log function to better normalize its distribution (unnormalized, it has a heavy right skew). After passing "price" through the log function, we convert "price" to a factor variable and divide it into 3 categories ("Low", "Medium", and "High") to prepare for KNN analysis.
 
-```{r price_categorization, echo=TRUE}
+```{r price_categorization, echo=FALSE}
 
 hist(kc_house_data$price)
 
@@ -123,7 +127,7 @@ summary(kc_house_data$price) # distribution of data points according to their ca
 
 Next, we split the data into 80% training, and 20% test subsets.
 
-```{r datasplit, echo=TRUE}
+```{r datasplit, echo=FALSE}
 set.seed(1)
 kc_house_data_train_rows = sample(1:nrow(kc_house_data),     #<- from 1 to the number of 
                                                      #   rows in the data set
@@ -196,7 +200,7 @@ ggplot(knn_different_k,
 
 Now that we have our k value, we can run our KNN analysis, using the same features we fed the chooseK() function previously.
 
-```{r KNNtraining, echo=TRUE}
+```{r KNNtraining, echo=FALSE}
 
 # Let's train the classifier for k = 12 
 # Install the "class" package that we'll use to run kNN.
@@ -231,7 +235,7 @@ KNN is a useful algorithm for classifying data points. We showed that at 74% acc
 It should be noted, however, that KNN cannot be used to predict *numeric* prices, since the response variable (price) must be categorical. To predict specific prices, one must use linear regression or PCR.
 
 
-```{r comparison_of_knnclassification_with_true_class, echo=TRUE}
+```{r comparison_of_knnclassification_with_true_class, echo=FALSE}
 
 # How does the kNN classification compare to the true class?
 # Let's take a look at the confusion matrix by combining the 
@@ -288,10 +292,6 @@ loadPkg('leaps')
 ```
 
 ## Loading and Cleaning the Data
-
-https://www.kaggle.com/harlfoxem/housesalesprediction/data
-
-https://github.com/matteobucalossi50/DATS6101_Project
 
 ```{r data, echo=FALSE}
 kc_house_data <- read.csv("kc_house_data.csv")
@@ -437,7 +437,7 @@ library("magrittr")
 
 First, we loaded the dataset into Rstudio, renamed it "house" and took a look at the structure of the dataset.
 
-```{r lod}
+```{r lod, echo=FALSE}
 house <- data.frame(read.csv("kc_house_data.csv", header = TRUE))
 str(house)
 ```
@@ -446,21 +446,21 @@ There are 21613 oberservations on 21 variables.
 ## Subset Data 
 We deleted some unuseful variables which we presumed were uncorrelated to house price such as lattitude, longitude, the 15 neighborhoods' sqft_living , sqft_lot, the year of renovated, zipcode, date of record, and id. Also, there are several variables containing mostly 0 values, so we also deleted them (these include "view" and "waterfront"). We then took a look at the datset.
 
-```{r subs}
+```{r subs, echo=FALSE}
 house2 <- subset(house,select = -c(id,date,waterfront,view,zipcode,lat,long,sqft_living15,sqft_lot15,yr_renovated))
 str(house2)
 ```
 There are 11 variables left and one variable is house, which will be used as an independent variable. All variables are numeric. 
 
 Next, we need to check if there are NA values in the dataset.
-```{r nas}
+```{r nas, include=TRUE}
 house2 <- drop_na(house2)
 sum(is.na(house2))
 ```
 There are no NA values. 
 
 
-```{r cor}
+```{r cor, echo=FALSE}
 corx=cor(house2[,-1])
 corx
 ```
@@ -472,7 +472,7 @@ Next, we took a look at the correlation of the 10 dependent variables, and we fo
 As the 10 variables have different scales, it is necessary to scale them before analysis. Performing PCA on un-normalized variables will heavily weight variables with high variances.
 
 We used the prcomp function to perform PCA, and subsequently checked the mean and sd of the variables. Since we scaled the variables, the differences in mean and sd are not large. 
-```{r pca}
+```{r pca, echo=FALSE}
 prin_comp <- prcomp(scale(house2[,-1]))
 summary(prin_comp)
 prin_comp$center ##output the mean of variables
@@ -481,28 +481,28 @@ prin_comp$scale ##output the sd of variables
 We can see that with 7 components, 95% of the variance is explained.
 
 Let's take a look at how the variables form  each component. 
-```{r rot}
+```{r rot, echo=FALSE}
 prin_comp$rotation
 ```
 We can see that sqft_above forms up nearly 43% of the first component. The second component consists mostly of sqft_basement, which hovers near 60%. 
 
 We can visualize the variance explained by each component. We can see that the first component explains the most, while the subsequent ones explain less. 
-```{r eig}
+```{r eig, echo=FALSE}
 fviz_eig(prin_comp)
 ```
 
 We can visualize how each component is formed by the different variables. However, the graph is very hard to see – much harder than the rotation vizualization. 
-```{r bip}
+```{r bip, echo=FALSE}
 biplot(prin_comp, scale = 0)
 ##The first principle component looks like sqft_above, the second looks like sqft_basement)
 ```
 
-```{r bip2}
+```{r bip2, echo=FALSE}
 biplot(prin_comp,6:7, scale =0)
 ```
 
 Visualizing the cumulative proportions of variance, we can see that after 7 components, the curve becomes smooth. 
-```{r pve}
+```{r pve, echo=FALSE}
 pr.var <- (prin_comp$sdev^2)
 pve <- pr.var/sum(pr.var)
 plot(cumsum(pve), xlab="Principal Component (standardized)", ylab ="Cumulative Proportion of Variance Explained",ylim=c(0,1),type="b")
@@ -511,7 +511,7 @@ plot(cumsum(pve), xlab="Principal Component (standardized)", ylab ="Cumulative P
 
 ## Predicting using PCA
 Finally, we created a PCR model wth the 7 components. Actually, the PCR model is a linear model, so we used the lm function to create it. 
-```{r predpca}
+```{r predpca, echo=FALSE}
 houseprice <- prin_comp$x
 modHouses <- lm(house2$price ~ houseprice[,1:7])
 summary(modHouses)
@@ -519,7 +519,7 @@ summary(modHouses)
 We can see that 61.3% of the variance is explained by the independent variables. We do not use accuracy to check whether the model is good or not – the reason being that the difference between the house prices is very large. So using accuracy to check the model would not make sense.
 
 We want to see how good the PCR model is, so we created a full linear model to compare it to. 
-```{r fullpca}
+```{r fullpca, echo=FALSE}
 fullmodel=lm(price~.-sqft_basement,data=house2)
 summary(fullmodel)
 ```
@@ -529,7 +529,7 @@ summary(fullmodel)
 
 The R^2 of the full model is 0.618, which is higher than PCR at 0.613. We can also see that both models underestimate the value of house prices over 4e+06.
 
-```{r plotpca}
+```{r plotpca, echo=FALSE}
 par(mfrow = c(1,2))
 plot(house2$price, predict(modHouses), xlab = "actual price", ylab = "Predicted price", main = "PCR", abline(a = 0, b = 1, col = "red"))
 plot(house2$price, predict(fullmodel), xlab = "actual price", ylab = "Predicted price", main = "Full model", abline(a = 0, b = 1, col = "red"))
@@ -606,7 +606,7 @@ uzscale <- function(df, append=0, excl=NULL) {
 ```
 
 We first load the dataset and remove columns that would be used in the regression. Then we drop the NA values from the dataset.
-```{r data clean}
+```{r data clean, include=FALSE}
 kc_house_data <- read.csv('kc_house_data.csv')
 colnames(kc_house_data)
 kc_house_data <- subset(kc_house_data, select = -c(1,2, 9, 10, 17, 18, 19, 20, 21))
@@ -624,7 +624,7 @@ kc_house_data <-  drop_na(kc_house_data)
 For our dataset, numbers of bedrooms, bathrooms, and floors are categorical variables, so we convert them into factors.
 Then we prepare a log scale grid for λ values, from 10^10 to 10^-2 in 100 segments, and then build the ridge model.
 Afterwards, we draw a plot of coefficients to see the overall trend. 
-```{r splitridge}
+```{r splitridge, echo=FALSE}
 loadPkg("ISLR")
 kc_house_data$bedrooms <- as.factor(kc_house_data$bedrooms)
 kc_house_data$bathrooms <- as.factor(kc_house_data$bathrooms)
@@ -651,7 +651,7 @@ The glmnet( ) function creates 100 models, with our choice of 100 $\lambda$ valu
 There are 55 coefficients for each model. The 100 $\lambda$ values are chosen from 0.02 ($10^{-2}$) to $10^{10}$, essentially covering the ordinary least square model ($\lambda$ = 0), and the null/constant model ($\lambda$ approaches infinity).
 
 
-```{r ridge}
+```{r ridge, echo=FALSE}
 ridge.mod$lambda[50] # 11498
 coef(ridge.mod)[,50]
 sqrt(sum(coef(ridge.mod)[-1,50]^2)) # 0.000155
@@ -664,7 +664,7 @@ Because the ridge regression uses the "L2 norm", the coefficients are expected t
 
 The model, however, only has 100 different values of $\lambda$ recorded, so we can use the predict function (part of the R basic stats library) for various different purposes, such as calculating the predicted coefficients for $\lambda$=50, for example.
 
-```{r predridge}
+```{r predridge, echo=FALSE}
 predict(ridge.mod,s=50,type="coefficients")[1:55,]
 ```
 
@@ -672,7 +672,7 @@ predict(ridge.mod,s=50,type="coefficients")[1:55,]
 
 Let us split the data into training and test sets, so that we can estimate test errors. The split will be used here for Ridge regression, and later for Lasso regression. 
 
-```{r splitrid, warning=F}
+```{r splitrid, warning=F, echo=FALSE}
 loadPkg("dplyr")
 set.seed(1)
 train = house_unscale %>% sample_frac(0.5)
@@ -686,25 +686,25 @@ y_test = test %>% dplyr::select(price) %>% unlist() # %>% as.numeric()
 ```
 
 
-```{r predrid}
+```{r predrid, echo=FALSE}
 ridge.mod=glmnet(x_train,y_train,alpha=0,lambda=grid, thresh=1e-12)
 ridge.pred=predict(ridge.mod,s=4,newx=x_test)
 mean((ridge.pred-y_test)^2)
 ```
 The test set mean squared error (MSE) is `r mean((ridge.pred-y_test)^2)`. (Keep in mind that we are using standardized scores for $\lambda = 4$.)
 
-```{r mseridge}
+```{r mseridge, echo=FALSE}
 mean((mean(y_train)-y_test)^2) # the test set MSE
 ```
 On the other hand, for the null model ($\lambda$ approaches infinity), the MSE can be found to be `r mean((mean(y_train)-y_test)^2)`. So $\lambda = 4$ reduces the variance by about half, at the expense of bias.
 
-```{r mseridge2}
+```{r mseridge2, echo=FALSE}
 ridge.pred=predict(ridge.mod,s=1e10,newx=x_test)
 mean((ridge.pred-y_test)^2)
 ```
 We could have also used a large $\lambda$ value to find the MSE for the null model. These two methods yield essentially the same answer of `r mean((ridge.pred-y_test)^2)`.
 
-```{r mseridg3}
+```{r mseridg3, echo=FALSE}
 ridge.pred = predict(ridge.mod, s = 0, newx = x_test)
 mean((ridge.pred - y_test)^2)
 predict(ridge.mod, s = 0, type="coefficients")[1:55,]
@@ -713,7 +713,7 @@ predict(ridge.mod, s = 0, type="coefficients")[1:55,]
 Now for the other extreme special case of small $\lambda$, which is the ordinary least square (OLS) model. We can first use the ridge regression result to predict the $\lambda$ =0 case. The MSE was found to be `r mean((ridge.pred - y_test)^2)` using this result. 
 
 We can also build the OLS model directly.
-```{r}
+```{r, echo=FALSE}
 ols.mod = lm(price~., data = train)
 summary(ols.mod)
 mean(residuals(ols.mod)^2)
@@ -724,7 +724,7 @@ The MSE for OLS regression is `r mean(residuals(ols.mod)^2)`
 
 We use a built-in cross-validation method with glmnet, which will select the minimal $\lambda$ value.
 
-```{r cvridge}
+```{r cvridge, echo=FALSE}
 # set.seed(1)
 cv.out=cv.glmnet(x_train,y_train,alpha=0)  # Fit ridge regression model on training data
 plot(cv.out)
@@ -732,7 +732,7 @@ bestlam = cv.out$lambda.min  # Select lamda that minimizes training MSE
 bestlam
 ```
 
-```{r cvridpred}
+```{r cvridpred, echo=FALSE}
 ridge.pred=predict(ridge.mod,s=bestlam,newx=x_test)
 mean((ridge.pred-y_test)^2)
 out=glmnet(x,y,alpha=0)
@@ -748,7 +748,7 @@ The first vertical dotted line shows that the lowest MSE is `r mean((ridge.pred-
 
 The same function, glmnet( ), with alpha set to 1 will build the Lasso regression model. 
 Then we draw the plot for different $\lambda$ values to see the overall trend.  
-```{r lasso}
+```{r lasso, echo=FALSE}
 lasso.mod=glmnet(x_train,y_train,alpha=1,lambda=grid)
 plot(lasso.mod)
 set.seed(1)
@@ -757,7 +757,7 @@ plot(cv.out)
 ```
 Here, we see that the lowest MSE is when $\lambda$ equals 0.369. It has about 47 non-zero coefficients. 
 
-```{r lassocoef} 
+```{r lassocoef, echo=FALSE} 
 bestlam=cv.out$lambda.min
 lasso.pred=predict(lasso.mod,s=bestlam,newx=x_test)
 mean((lasso.pred-y_test)^2)
@@ -767,7 +767,7 @@ lasso_coef
 lasso_coef[lasso_coef!=0]
 ```
 
-```{r lasso R2}
+```{r lasso R2, echo=FALSE}
 sst1 <- sum((y_test - mean(y_test))^2)
 sse1 <- sum((lasso.pred - y_test)^2)
 rsq1 <- 1 - sse1 / sst1
@@ -776,7 +776,7 @@ rsq1
 We then calculate the R squared of lasso regression, which is `r rsq1`.  
 
 Lasso regression is also a good tool for feature selection. So we build a linear model by using lasso to select variables.
-```{r lmlasso}
+```{r lmlasso, echo=FALSE}
 lasLin <- lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot+floors+condition+grade+sqft_basement+yr_built+yr_renovated, data = kc_house_data)
 summary(lasLin)
 vif(lasLin)
@@ -784,7 +784,7 @@ vif(lasLin)
 
 The condition p-values are all lower than 0.05. We consequently remove them from the model and rebuild it.
 
-```{r lmlasso1}
+```{r lmlasso1, echo=FALSE}
 lasLin1 <- lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot+floors+grade+sqft_basement+yr_built+yr_renovated, data = kc_house_data)
 summary(lasLin1)
 vif(lasLin)

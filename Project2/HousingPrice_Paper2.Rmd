@@ -478,7 +478,7 @@ summary(prin_comp)
 prin_comp$center ##output the mean of variables
 prin_comp$scale ##output the sd of variables
 ```
-We can see that with 7 components, 95% of the variance is explained. 95% variance explained is normal for PCA, so I decided to use 7 components. 
+We can see that with 7 components, 95% of the variance is explained.
 
 Let's take a look at how the variables form  each component. 
 ```{r rot}
@@ -510,7 +510,7 @@ plot(cumsum(pve), xlab="Principal Component (standardized)", ylab ="Cumulative P
 
 
 ## Predicting using PCA
-Finally, we can created a PCR model wth the 7 components. Actually, the PCR model is a linear model, so we used the lm function to create it. 
+Finally, we created a PCR model wth the 7 components. Actually, the PCR model is a linear model, so we used the lm function to create it. 
 ```{r predpca}
 houseprice <- prin_comp$x
 modHouses <- lm(house2$price ~ houseprice[,1:7])

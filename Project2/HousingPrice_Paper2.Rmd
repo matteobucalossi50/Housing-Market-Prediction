@@ -1,36 +1,56 @@
 ---
-title: "Housing Market - Code"
+title: "Housing Market - Paper2"
 author: "Anti-Code Group"
 date: "11/26/2019"
 output:  
-  html_document:
-    toc: true
-    toc_float: true
-    number_sections: true
+    rmdformats::readthedown:
+      toc_float: true
+      number_sections: true
+      includes:
+        before_body: header.html
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-options(scipen = 999)
+options(scipen = 999,  digits = 3, big.mark=",", warn = -1)
 ```
 
 ```{r basicfunct, include=FALSE}
 loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.packages(x,dep=T,repos="http://cran.us.r-project.org"); if(!require(x,character.only=T)) stop("Package not found") } }
 ```
 
-https://www.kaggle.com/harlfoxem/housesalesprediction/data
-
-https://github.com/matteobucalossi50/DATS6101_Project
 
 # Introduction
 
-This paper continues our discussion on Seattle housing prices from our first project. As mentioned in our earlier report, "Seattle boasts among 'hottest' housing markets in the country; as of [July 2018](https://bit.ly/2v5UMcn), Seattle 'led the nation in home price gains' for 21 straight months.'" Given this context, our basic SMART question remains the same: how can we predict house prices in Seattle?
+This paper continues our discussion on Seattle housing prices from our first project. As mentioned in our earlier report, "Seattle boasts among 'hottest' housing markets in the country; as of [July 2018](https://bit.ly/2v5UMcn), Seattle 'led the nation in home price gains' for 21 straight months.'" Given this context, our basic SMART question remains the same: how can we predict house prices in Seattle?  This results to be a regression problem on the target variable of price, and we will apply 4 different approaches learned throughout the course to try to solve it.
 
-Included in our discussion is some exploratory data analysis (EDA) from our first assignment, along with some new models, including KNN, ridge and lasso regression, random forest, PCA, PCR, and decision trees. Each model comes with its own advantages and disadvantages, and as such no single model offers total explanatory power. Our hope, however, is that the sum is greater than its parts.
+Included in our discussion is some exploratory data analysis (EDA) from our first assignment, along with some new models, including KNN, ridge and lasso regression, PCA/PCR, and decision trees/random forest. Each model comes with its own advantages and disadvantages, and as such no single model offers total explanatory power. Our hope, however, is that the sum is greater than its parts.
 
 # EDA
 
 The following are excerpts and graphs from the EDA section of our previous report. We are including them here to remind the reader of our dataset's attributes, before we dive into the analysis.
+
+```{r loadd, echo=FALSE}
+kc_house_data <- read.csv("kc_house_data.csv")
+str(kc_house_data)
+```
+```{r cleand, include=FALSE}
+kc_house_data <- subset(kc_house_data, select = -c(9, 10))
+
+kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms != 0)
+
+kc_house_data <- subset(kc_house_data, kc_house_data$bathrooms != 0)
+
+kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms < 30)
+
+kc_house_data <-  drop_na(kc_house_data)
+
+kc_house_data$condition <- as.factor(kc_house_data$condition)
+
+kc_house_data$grade <- as.factor(kc_house_data$grade)
+
+price.ln = log(kc_house_data$price)
+```
 
 "A brief overview of the dataset yields the following observations for housing price: the minimum price is \$78,000, while the maximum is \$7,700,000 (quite a large range); the mean of the dataset is \$540,198 (indicating that the dataset is right-skewed, as further indicated by the histogram below); the standard deviation of the dataset is \$367,142; and the variance is 134,792,956,735 (quite large, indicating ["that the data points are very spread out from the mean, and from one another"](https://bit.ly/2MZ1cCn)."
 
@@ -41,7 +61,27 @@ axis(side=1, at=axTicks(1),
 
 ```
 
-### Comparison of sqft living with price
+Below is a visualization of the points in the dataset by price on a map, plotted with the leaflet library.
+Note that the data have been divided by unequal bins to provide a better visualization of the distribution of housing price, so please read the legend carefully. More expensive houses tend to be concentrated near the water and center of the city.
+ 
+```{r geo, echo=FALSE}
+price.bins <- c(0, 250000, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000, 8000000)
+qpal <-  colorBin(palette = 'GnBu', kc_house_data$price, bins= price.bins, n = 9)
+house.map1 <- leaflet(kc_house_data) %>% 
+  addProviderTiles("CartoDB.Positron") %>% 
+  addCircleMarkers(lng = ~long, lat = ~lat, 
+                   stroke = FALSE, 
+                   fillOpacity = 5, 
+                   color = ~qpal(price), 
+                   radius = 2,
+                   label = ~as.character(paste0('Price: $', price, ", ", 'condition: ', condition, ", ", 'year built: ', yr_built, 'Sqft living: ', sqft_living))) %>%
+  addLegend('bottomright', pal = qpal, values = ~price, opacity = 1, title = 'Price', labFormat = labelFormat(prefix = '$', between = ' - $'))
+
+house.map1
+
+```
+
+## Important Features Comparisons
 
 From the scatterplot, it's apparent that there is a relatively strong, positive correlation between housing price and living space (.70192, to be exact). That is, as living space increases, so does housing price. Note that a majority of the data points lie below 6,000 sqft, and below $2 million.
 
@@ -61,6 +101,7 @@ Here we have a boxplot comparing "grade" with housing price. "Grade" represents 
 ggplotly(ggplot(kc_house_data, aes(x=grade, y=price, fill=grade)) + geom_boxplot() + scale_fill_brewer(palette="Spectral") + ggtitle("Housing Price vs. Apartment Grade (log)") + ylab("Housing Price ($)") + xlab("Apartment Grade") +  theme(plot.title= element_text(hjust=0.5, size = 14)) + scale_y_log10(labels = function(x) format(x,nsmall = 2,scientific = FALSE, big.mark = ',')))
 
 ```
+
 
 # KNN
 
@@ -89,7 +130,7 @@ loadPkg('plotly')
 loadPkg('rmdformats')
 loadPkg('class')
 
-kc_house_data <- data.frame(read_csv("~/Downloads/kc_house_data.csv"))
+kc_house_data <- data.frame(read_csv("kc_house_data.csv"))
 
 kc_house_data <- subset(kc_house_data, select = -c(9, 10))
 
@@ -183,7 +224,7 @@ knn_different_k = sapply(seq(1, 25, by = 2),  #<- set k to be odd number from 1 
                                              val_class = kc_house_data_test[, "price"]))
 
 # Reformat the results to graph the results.
-str(knn_different_k)
+# str(knn_different_k)
 knn_different_k = data.frame(k = knn_different_k[1,],
                              accuracy = knn_different_k[2,])
 
@@ -258,7 +299,9 @@ kNN_acc
 
 ```
 
-# Trees
+# Tree Modeling
+
+We decided to also use a Decision Tree modeling approach for this regression problem, and see if we could also gain interesting visualizations of the dataset to predict the value of price on average.
 
 ```{r lib, include=FALSE}
 loadPkg("dplyr")
@@ -291,9 +334,7 @@ loadPkg('randomForest')
 loadPkg('leaps')
 ```
 
-## Loading and Cleaning the Data
-
-```{r data, echo=FALSE}
+```{r data, include=FALSE}
 kc_house_data <- read.csv("kc_house_data.csv")
 str(kc_house_data)
 ```
@@ -318,65 +359,81 @@ price.ln = log(kc_house_data$price)
 ```
 
 
-# Regression Tree
+## Regression Tree
 
-```{r tree, echo=FALSE}
+```{r tree, include==FALSE}
 tree1 <- tree(log(price) ~ bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=kc_house_data)
 summary(tree1)
 ```
 
-The tree built on all the features used as predictors (excluding id, date, geographic variables and sqft_living15 and sqft_lot15) for price, and presents 9 terminal nodes and a mean squared error of 0.12.
+Using the 'tree' package, we built a tree on all the features used as predictors (i.e. excluding id, date, the various geographic variables and sqft_living15 and sqft_lot15) for price. We used the logarithmic of the price to provide an easier visualization of the tree and allowed more precide average values per node. This tree presented 9 termindal nodes and a mean squared error of 0.12. 
 
 ```{r plott, echo=FALSE}
 plot(tree1) 
+title("Simple Regression Tree")
 text(tree1,cex=0.75, digits=3)
 ```
 
-We can see that the algorithm splits the data using grade, yr_built and sqft_living. As expected, if grade is better and sqft_living are larger, price is higher. While if grade is lower and houses get older and smaller, price trends lower.
+From the plot of the tree, we can see that the algorithm splits the data using grade, yr_built and sqft_living. As expected as a general trend, if grade is better and sqft_living are larger, price would be higher. While if grade is lower and houses get smaller, price would then be likely to be lower. The splits also show an interesting fact that the age of house correlates positively with its price, as in splits based on yr_built the older the house the higher the average house price would be.
 As we used the log of price to predict price with this tree, we can see how the highest average of price in the farthest right leaf is `r exp(14.07)` dollars and the lowest average of price in the farthest left is `r exp(12.52)` dollars.
 
-```{r tree2, echo=FALSE}
-tree2 <- rpart(log(price) ~ bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=kc_house_data, cp=.02)
+Furthermore, we use the 'rpart' package to build fancier visualization of decision trees for this dataset.
 
+```{r tree2, include=FALSE}
+tree2 <- rpart(log(price) ~ bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=kc_house_data, cp=.02)
+summary(tree2)
 par(xpd = NA, mar = rep(0.7, 4)) 
 plot(tree2, compress = TRUE)
 text(tree2, cex = 0.7, use.n = TRUE, fancy = TRUE, all = TRUE)
-fancyRpartPlot(tree2)
-
-rpart.plot(tree2, box.palette="RdBu", shadow.col="gray", nn=TRUE)
 ```
 
-Using the package rpart, we can build a tree that provides a similar result but from which we can observe the proportion of sample observations present in each terminal leaf (in this case 7). As expected, the right branches of the tree only contain 20% of the houses, while the largest proportion are on the left branches given their lower price.
+```{r tree2pl, echo=FALSE}
+fancyRpartPlot(tree2, main = "Fancy Regression Tree")
 
+rpart.plot(tree2, box.palette="RdBu", shadow.col="gray", nn=TRUE, main = "Fancier Regression Tree")
+```
+
+These trees provide a fairly similar result from the classic tree, but from which we can observe the proportion of sample observations present in each terminal leaf (in this case only 7). Again, the variables used to build the tree are grade, sqft_living and yr_built.  As expected, the right branches of the tree only contain 20% of the houses, as the most expensive houses with better grade than the rest; indeed, the houses that have better grande and sqft superior than 3757, result to be only 5% of the data. Whereas, the largest proportions are within the left branches given their lower grade: 80% of house are of grade between 3 and 8 and 52% of grade 3 to 7. The terminal node resulting with highest proportion is the one containing observations of house of grade 7 and built after 1953, namely 29% of the observations in the dataset.  
+
+On another note, we decided to experiment with trees and build one that would provide an average of prices per different geographic areas. Thus, using the longitude and latitude as predictors for the log of price, we built the following tree which shows the mean value of price per each are on a map, divided by nodes on longitude and latitude. 
 ```{r maptree, echo=FALSE}
 treefit = tree(log(price) ~ long+lat,data=kc_house_data)
-plot(treefit)
-text(treefit, cex=0.75, digits = 3)
 price.deciles = quantile(kc_house_data$price,0:10/10)
 cut.prices = cut(kc_house_data$price,price.deciles,include.lowest=TRUE)
 plot(kc_house_data$long,kc_house_data$lat,col=grey(10:2/11)[cut.prices],pch=20,xlab="Longitude",ylab="Latitude")
+title('Regression Tree Map')
 partition.tree(treefit,ordvars=c("long","lat"),add=TRUE, col = 'red')
 ```
 
+This visualization is helpful to note that higher prices are corresponding to the central area, i.e. Seattle downtown and adjacent zones, where the average price is estimated to be `r exp(13.9)`, while areas on the outskirts of the region shows average values of `r exp(12.7)` or `r exp(12.6)`, as one would normally expect.
+
+
 ## Prune tree
+
+Subsequently, we pruned the tree down with a normal 'prune' function. 
 
 ```{r prune, echo=FALSE}
 tree1.seq <- prune.tree(tree1) # Sequence of pruned tree sizes/errors
 plot(tree1.seq)  # error versus plot size
-tree1.seq$dev # Vector of error rates for prunings in order 
+```
 
+First of all, we can observe the plot of a sequence of differenct pruned trees' sizes versus their error rates. The vector of these error rates for the pruning of the tree in our case resulted in `r tree1.seq$dev`.
+
+```{r pruntr, echo=FALSE}
 opt.trees = which(tree1.seq$dev == min(tree1.seq$dev)) # Positions of optimal (with respect to error) trees
-min(tree1.seq$size[opt.trees]) # Size of smallest optimal tree
 
-prune.tree(tree1,best=5) # Returns best pruned tree with all data
 plot(prune.tree(tree1,best=5))
+title('Pruned Regression Tree')
 text(prune.tree(tree1,best=5), cex=0.75, digits = 3)
 ```
-Plotting the error versus the size of trees, we can see that the optimal pruned tree (smallest tree minimizing the errors) would have 9 nodes.
 
-## Testing the model 
+As we intended to represent the smallest optimal tree among these pruned trees, this appeared to be of a size equal to `r min(tree1.seq$size[opt.trees])`. The plot then shows a pruned tree with 6 terminal nodes, and splits operated again on grade, sqft_living and yr_built. This tree results simpler to read given the fewer split, although it does not add predictive power while actually taking away some important splits from a tree model that already simplifies the dataset significantly. Thus, we believed it was better to use a non-pruned tree for testing our model.
 
-```{r splittree, echo=FALSE}
+## Testing model 
+
+First, to test the model perfomance, we divided the dataset in training and test set, where the latter is simply the first fold of the data. 
+
+```{r splittree, include=FALSE}
 fold <- floor(runif(nrow(kc_house_data),1,11)) 
   kc_house_data$fold <- fold
 test.set <- kc_house_data[kc_house_data$fold == 1,] 
@@ -384,41 +441,88 @@ train.set <- kc_house_data[kc_house_data$fold != 1,]
 ```
 
 ```{r test, echo=FALSE}
-tree.pred <- tree(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=train.set, mindev=0.001)
-treepr <- prune.tree(tree.pred, best = 5) # Return best pruned tree with 5 leaves, evaluating error on training data
-treepr
+fit <- rpart(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=train.set)
+#printcp(fit) # display the results
+plotcp(fit) # visualize cross-validation results
+#summary(fit) # detailed summary of splits
+
+# create additional plots
+par(mfrow=c(1,2)) # two plots on one page
+rsq.rpart(fit) # visualize cross-validation results
+
+```
+
+```{r }
+plot(fit, uniform=TRUE,
+   main="Regression Tree for Price ")
+text(fit, use.n=TRUE, all=TRUE, cex=.8)
+```
+
+```{r}
+# prune the tree
+
+fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"]
+```
+```{r}
+pfit<- prune(fit, cp=0.01) # from cptable   
+
+# plot the pruned tree
+plot(pfit, uniform=TRUE,
+   main="Pruned Regression Tree for Price")
+text(pfit, use.n=TRUE, all=TRUE, cex=.8)
+
+```
+```{r}
+treepr <- prune(tree.pred, best = 5, cp=.02) # Return best pruned tree with 5 leaves, evaluating error on training data
+summary(treepr)
 plot(treepr) 
 text(treepr,cex=0.75, digits=3)
 
-tree.pred.seq <- prune.tree(tree.pred)
+tree.pred.seq <- prune(tree.pred, cp=.02)
 plot(tree.pred.seq)
 tree.pred.seq$dev
 opt.trees = which(tree.pred.seq$dev == min(tree.pred.seq$dev)) 
 min(tree.pred.seq$size[opt.trees]) 
 ```
 
-Building the trees on the training dataset, we obtain a slightly different tree pruned to 5 leaves, which splits data on grade first and then sqft_living. The plot of errors versus size also points out an optimal tree at 34 nodes.
+Building the tress on training dataset, we obtain a slighlty different tree pruned to 5 leaves, which splits data on grade first and then sqft_living. The plot of errors versus size also points out an optimal tree at 34 nodes.
 
 ```{r predtree, echo=FALSE}
+tree.pred <- rpart(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=train.set, cp=.02)
 treepr.pred <- prune.tree(tree.pred, best = 5, newdata = test.set) #evaluates on test data
 treepr.pred
 plot(treepr.pred) 
 text(treepr.pred,cex=0.75, digits=3)
 ```
 
-Evaluating this tree on test data, we can see how the trained model did a good job of predicting price for the dataset, as the errors and tree are almost identical.
+Evaluating this tree on test data, we can see how the trained model did a good job at predicting price for the dataset as errors and tree are almost identical.
 
-# Random Forest
+```{r acctr, echo=FALSE}
+#rsq.rpart(tree.pred)
+#p1 <- predict(tree.pred, test.set)
+#MAE <- function(actual, predicted) {mean(abs(actual - predicted)) }
+#MAE(test.set$price, p1)
+
+tr.pred = predict(fit, s = 0, newx = train.set)
+mean((tr.pred - test.set$price)^2)
+#predict(fit, s = 0, type="coefficients")[1:12,]
+```
+
+
+## Random Forest
+
+Ultimately, we used a Random Forest algorithm to evaluate if this type of ensembling could increase the perfomance of the tree model on our dataset.
 
 ```{r rf, echo=FALSE}
 ff1 <- randomForest(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data = train.set, importance = TRUE)
 ff1
 ```
 
-A regression random forest on all the predictor variables for price leads to 500 trees for 3 variables tried at each split, and eventually provides 68.5% of the variance explained, and an MSE of 0.0875.
+Thus, we ran a regression random forest on all the predictors variables for the logarithmic of price as target. The model builds 500 trees ensembled with 3 variables tried at each split, and it eventually provides a 68.5% of variance explained and a MSE of 0.0875.
 
 
 # PCA
+
 Here, we use principle component analysis to predict house price. We chose this method because there are too many variables, and did not know which ones to use. We want to capture as much information as possible by the fewest number of variables. 
 
 ```{r libpca, include=FALSE}
@@ -435,13 +539,10 @@ library("pls")
 library("magrittr")
 ```
 
-First, we loaded the dataset into Rstudio, renamed it "house" and took a look at the structure of the dataset.
-
-```{r lod, echo=FALSE}
+```{r lod, include=FALSE}
 house <- data.frame(read.csv("kc_house_data.csv", header = TRUE))
 str(house)
 ```
-There are 21613 oberservations on 21 variables.
 
 ## Subset Data 
 We deleted some unuseful variables which we presumed were uncorrelated to house price such as lattitude, longitude, the 15 neighborhoods' sqft_living , sqft_lot, the year of renovated, zipcode, date of record, and id. Also, there are several variables containing mostly 0 values, so we also deleted them (these include "view" and "waterfront"). We then took a look at the datset.
@@ -459,13 +560,11 @@ sum(is.na(house2))
 ```
 There are no NA values. 
 
-
 ```{r cor, echo=FALSE}
 corx=cor(house2[,-1])
 corx
 ```
 Next, we took a look at the correlation of the 10 dependent variables, and we found that they are all related, and some are highly related. This demonstrates that it is difficult to determine which ones are important, so we used PCA to reduce dimensionality. 
-
 
 
 ## PCA part
@@ -510,6 +609,7 @@ plot(cumsum(pve), xlab="Principal Component (standardized)", ylab ="Cumulative P
 
 
 ## Predicting using PCA
+
 Finally, we created a PCR model wth the 7 components. Actually, the PCR model is a linear model, so we used the lm function to create it. 
 ```{r predpca, echo=FALSE}
 houseprice <- prin_comp$x
@@ -526,7 +626,6 @@ summary(fullmodel)
 61.8% of the variance is explained by the independent variable in the full linear model. It is a bit better than the PCR model. 
 
 ## PCR vs. Full Linear Model: A Comparison 
-
 The R^2 of the full model is 0.618, which is higher than PCR at 0.613. We can also see that both models underestimate the value of house prices over 4e+06.
 
 ```{r plotpca, echo=FALSE}
@@ -538,6 +637,7 @@ plot(house2$price, predict(fullmodel), xlab = "actual price", ylab = "Predicted 
 ## Limitations of PCA 
 There are a few price outliers. We did not delete them, however, because we think the high prices are important. 
 The response variables must be numeric, even though the grade and condition variables are actually catagorical. PCA also relies on the assumption of normality, but our dataset is heavily right skewed.
+
 
 # Ridge and Lasso 
 
@@ -604,8 +704,6 @@ uzscale <- function(df, append=0, excl=NULL) {
 # tmp = uzscale(HittersClean,0,c(2,"Salary") )
 # detach("package:ISLR", unload = T)
 ```
-
-We first load the dataset and remove columns that would be used in the regression. Then we drop the NA values from the dataset.
 ```{r data clean, include=FALSE}
 kc_house_data <- read.csv('kc_house_data.csv')
 colnames(kc_house_data)
@@ -620,7 +718,7 @@ kc_house_data <-  drop_na(kc_house_data)
 # nrow(kc_house_data)
 ```
 
-### The Ridge 
+## The Ridge 
 For our dataset, numbers of bedrooms, bathrooms, and floors are categorical variables, so we convert them into factors.
 Then we prepare a log scale grid for λ values, from 10^10 to 10^-2 in 100 segments, and then build the ridge model.
 Afterwards, we draw a plot of coefficients to see the overall trend. 
@@ -744,7 +842,7 @@ rsq
 ```
 The first vertical dotted line shows that the lowest MSE is `r mean((ridge.pred-y_test)^2)`. The second vertical dotted line is within one standard error. Then we calculate the R squared value. R squared is `r rsq` for the ridge model.
 
-### The Lasso
+## The Lasso
 
 The same function, glmnet( ), with alpha set to 1 will build the Lasso regression model. 
 Then we draw the plot for different $\lambda$ values to see the overall trend.  
@@ -791,9 +889,21 @@ vif(lasLin)
 ```
 The R squared value is `r summary(lasLin1)$adj.r.squared`, which is better than what was achieved with ridge and lasso regression.
 
+
 # Conclusion
 
-In the end, each of our models comes with its advantages and disadvantages. Although KNN proved 74% accurate at classifying prices into "low", "medium" and "high" categories, these categories ultimately do not tell us much, considering their large ranges. Decision trees provide simple visualizations and tell us which features are the most import, but it oversimplies the dataset and yields a low amount of variance explained (even with the random forest included). PCA and PCR yield relatively low amounts of variance explained (around 60%), and they do not differ much from the variance explained by a full linear model. The ridge and lasso regressions also do not perform as well as the full linear model (they have lower R2 values). **To summarize our findings, in general, linear regression tends to offer the most explanatory power, and "sqft_living" and "grade" seem to influence price the most.** This makes intuitive sense: living space and quality of construction are the most important variables when it comes to housing price.
+In the end, each of our models comes with its advantages and disadvantages. Although KNN proved 74% accurate at classifying prices into "low", "medium" and "high" categories, these categories ultimately do not tell us much, considering their large ranges. Decision trees provide simple visualizations and tell us which features are the most import, but it oversimplies the dataset and yields a low amount of variance explained (even with the random forest included). PCA and PCR yield relatively low amounts of variance explained (around 60%), and they do not differ much from the variance explained by a full linear model. The ridge and lasso regressions also do not perform as well as the full linear model (they have lower R2 values). **To summarize our findings, in general, linear regression tends to offer the most explanatory power, and "sqft_living" and "grade" seem to influence price the most.** This makes intuitive sense: living space and quality of construction are the most important variables when it comes to housing price, and the simple linear nature of this regression problem accepts this simple predictive model as quite efficient and strong indeed.
+
+
+# Bibliography
+
+https://www.kaggle.com/harlfoxem/housesalesprediction/data
+
+Perry, M. J. (2016, June 5). New US homes today are 1,000 square feet larger than in 1973 and living space per person has nearly doubled. Retrieved from https://www.aei.org/carpe-diem/new-us-homes-today-are-1000-square-feet-larger-than-in-1973-and-living-space-per-person-has-nearly-doubled/
+
+Roberts, D. (n.d.). Variance and Standard Deviation. Retrieved from https://mathbitsnotebook.com/Algebra1/StatisticsData/STSD.html
+
+Rosenberg, M. (2018, July 31). Seattle-area home prices this spring rose at fastest rate since 2006 bubble. The Seattle Times. Retrieved from https://www.seattletimes.com/business/real-estate/seattle-area-home-prices-this-spring-rose-at-fastest-rate-since-2006-bubble/
 
 
 

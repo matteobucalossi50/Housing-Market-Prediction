@@ -841,6 +841,7 @@ We use a built-in cross-validation method with glmnet, which will select the min
 # set.seed(1)
 cv.out=cv.glmnet(x_train,y_train,alpha=0)  # Fit ridge regression model on training data
 plot(cv.out)
+bestlam = cv.out$lambda.min
 ```
 
 The minimal $\lambda$ value minimizing training MSE results to be `r cv.out$lambda.min` in this case.

@@ -537,10 +537,7 @@ plot(house2$price, predict(fullmodel), xlab = "actual price", ylab = "Predicted 
 
 ## Limitations of PCA 
 There are a few price outliers. We did not delete them, however, because we think the high prices are important. 
-The response variables must be numeric, even the grade and condition variables are actually catagorical. 
-PCA relies on normality assumption
-The components must be orthogonal (Sometimes consider that principal components are orthogonal to the others it's a restriction to find projections with the highest variance)
-
+The response variables must be numeric, even though the grade and condition variables are actually catagorical. PCA also relies on the assumption of normality, but our dataset is heavily right skewed.
 
 # Ridge and Lasso 
 

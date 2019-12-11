@@ -449,7 +449,7 @@ title('Pruned Regression Tree')
 text(prune.tree(tree1,best=5), cex=0.75, digits = 3)
 ```
 
-As we intended to represent the smallest optimal tree among these pruned trees, this appeared to be of a size equal to `r min(tree1.seq$size[opt.trees])`. The plot then shows a pruned tree with 6 terminal nodes, and splits operated again on grade, sqft_living and yr_built. This tree results simpler to read given the fewer split, although it does not add predictive power while actually taking away some important splits from a tree model that already simplifies the dataset significantly. Thus, we believed it was better to use a non-pruned tree for testing our model.
+As we intended to represent the smallest optimal tree among these pruned trees, this appeared to be of a size equal to `r min(tree1.seq$size[opt.trees])`. The plot then shows a pruned tree with 6 terminal nodes, and splits operated again on grade, sqft_living and yr_built. This tree results simpler to read given the fewer split, although it does not add predictive power while actually taking away some important splits from a tree model that already simplifies the dataset significantly.
 
 ## Testing model 
 
@@ -462,73 +462,44 @@ test.set <- kc_house_data[kc_house_data$fold == 1,]
 train.set <- kc_house_data[kc_house_data$fold != 1,] 
 ```
 
-```{r test, echo=FALSE}
-fit <- rpart(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=train.set)
+We then train a regression tree on the basis of the 'rpart' library, using our training dataset this time. The plots below show the cross-validation results of this tree, showing that 8 splits would create an optimal sized tree. This tree presents a root node error of 0.3.
+
+```{r cvtest, echo=FALSE}
+tree.pred <- rpart(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=train.set)
 #printcp(fit) # display the results
-plotcp(fit) # visualize cross-validation results
+plotcp(tree.pred) # visualize cross-validation results
 #summary(fit) # detailed summary of splits
 
-# create additional plots
+# additional plots
 par(mfrow=c(1,2)) # two plots on one page
-rsq.rpart(fit) # visualize cross-validation results
-
+rsq.rpart(tree.pred) # visualize cross-validation results
 ```
 
-```{r }
-plot(fit, uniform=TRUE,
-   main="Regression Tree for Price ")
-text(fit, use.n=TRUE, all=TRUE, cex=.8)
-```
+Building the tree on training dataset using the 'tree' package, we obtain a slighlty different tree pruned to 5 leaves, which splits data on grade first and then sqft_living.
 
-```{r}
-# prune the tree
-
-fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"]
-```
-```{r}
-pfit<- prune(fit, cp=0.01) # from cptable   
-
-# plot the pruned tree
-plot(pfit, uniform=TRUE,
-   main="Pruned Regression Tree for Price")
-text(pfit, use.n=TRUE, all=TRUE, cex=.8)
-
-```
-```{r}
-treepr <- prune(fit, best = 5, cp=.02) # Return best pruned tree with 5 leaves, evaluating error on training data
-summary(treepr)
+```{r trtest, echo=FALSE}
+tree.pred <- tree(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=train.set, mindev=0.001)
+treepr <- prune.tree(tree.pred, best = 5) # Return best pruned tree with 5 leaves, evaluating error on training data
 plot(treepr) 
+title('Training Regression Tree')
 text(treepr,cex=0.75, digits=3)
 
-tree.pred.seq <- prune(treepr, cp=.02)
+tree.pred.seq <- prune.tree(tree.pred)
 plot(tree.pred.seq)
 tree.pred.seq$dev
 opt.trees = which(tree.pred.seq$dev == min(tree.pred.seq$dev)) 
-min(tree.pred.seq$size[opt.trees]) 
 ```
 
-Building the tress on training dataset, we obtain a slighlty different tree pruned to 5 leaves, which splits data on grade first and then sqft_living. The plot of errors versus size also points out an optimal tree at 34 nodes.
+The plot of errors versus size also points out an optimal tree at `r min(tree.pred.seq$size[opt.trees])`  nodes.
 
 ```{r predtree, echo=FALSE}
-tree.pred <- rpart(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data=train.set, cp=.02)
-treepr.pred <- prune(tree.pred, best = 5, newdata = test.set, cp = 0.02) #evaluates on test data
-treepr.pred
+treepr.pred <- prune.tree(tree.pred, best = 5, newdata = test.set) #evaluates on test data
 plot(treepr.pred) 
+title('Test Regression Tree')
 text(treepr.pred,cex=0.75, digits=3)
 ```
 
-Evaluating this tree on test data, we can see how the trained model did a good job at predicting price for the dataset as errors and tree are almost identical.
-
-```{r acctr, echo=FALSE}
-#rsq.rpart(tree.pred)
-#p1 <- predict(tree.pred, test.set)
-#MAE <- function(actual, predicted) {mean(abs(actual - predicted)) }
-#MAE(test.set$price, p1)
-
-tr.pred = predict(fit, s = 0, newx = train.set)
-mean((tr.pred - test.set$price)^2)
-#predict(fit, s = 0, type="coefficients")[1:12,]
-```
+Evaluating this tree on test data, we can see how the trained model did a good job at predicting price for the dataset as errors and tree are almost identical. 
 
 
 ## Random Forest

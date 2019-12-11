@@ -742,7 +742,7 @@ sse <- sum((ridge.pred - y_test)^2)
 rsq <- 1 - sse / sst
 rsq
 ```
-The first vertical dotted line shows that the lowest MSE is `r mean((ridge.pred-y_test)^2)`. The second vertical dotted line is within one standard error. Then we calcualte the R squared value. R squared is `r rsq` for the ridge model.
+The first vertical dotted line shows that the lowest MSE is `r mean((ridge.pred-y_test)^2)`. The second vertical dotted line is within one standard error. Then we calculate the R squared value. R squared is `r rsq` for the ridge model.
 
 ### The Lasso
 
@@ -793,7 +793,7 @@ The R squared value is `r summary(lasLin1)$adj.r.squared`, which is better than 
 
 # Conclusion
 
-In the end, each of our models comes with its advantages and disadvantages. Although KNN proved 74% accurate at classifying prices into "low", "medium" and "high" categories, these categories ultimately do not tell us much, considering their large ranges. Decision trees provide simple visualizations and tell us which features are the most import, but it oversimplies the dataset and yields a low amount of variance explained (even with the random forest included). Ridge and lasso regressions are good to use when the predictor variables demonstrate multicollinearity. But because there is not much collinearity amongst our predictor variables, the ridge and lasso models yield results quite similar to PCA and the full linear model. **To summarize our findings, in general, "sqft_living" and "grade" seem to influence price the most.** This makes intuitive sense: living space and quality of construction are the most important variables when it comes to housing price.
+In the end, each of our models comes with its advantages and disadvantages. Although KNN proved 74% accurate at classifying prices into "low", "medium" and "high" categories, these categories ultimately do not tell us much, considering their large ranges. Decision trees provide simple visualizations and tell us which features are the most import, but it oversimplies the dataset and yields a low amount of variance explained (even with the random forest included). PCA and PCR yield relatively low amounts of variance explained (around 60%), and they do not differ much from the variance explained by a full linear model. The ridge and lasso regressions also do not perform as well as the full linear model (they have lower R2 values). **To summarize our findings, in general, linear regression tends to offer the most explanatory power, and "sqft_living" and "grade" seem to influence price the most.** This makes intuitive sense: living space and quality of construction are the most important variables when it comes to housing price.
 
 
 

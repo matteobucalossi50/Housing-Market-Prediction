@@ -454,6 +454,7 @@ There are 11 variables left and one variable is house, which will be used as an 
 
 Next, we need to check if there are NA values in the dataset.
 ```{r nas}
+house2 <- drop_na(house2)
 sum(is.na(house2))
 ```
 There are no NA values. 

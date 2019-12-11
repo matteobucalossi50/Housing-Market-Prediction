@@ -190,7 +190,7 @@ summary(kc_house_data$price) # distribution of data points according to their ca
 
 Next, we split the data into 80% training, and 20% test subsets.
 
-```{r datasplit, echo=FALSE}
+```{r datasplit, include=FALSE}
 set.seed(1)
 kc_house_data_train_rows = sample(1:nrow(kc_house_data),     #<- from 1 to the number of 
                                                      #   rows in the data set
@@ -820,7 +820,7 @@ We could have also used a large $\lambda$ value to find the MSE for the null mod
 
 ```{r mseridg3, echo=FALSE}
 ridge.pred = predict(ridge.mod, s = 0, newx = x_test)
-mean((ridge.pred - y_test)^2)
+#mean((ridge.pred - y_test)^2)
 predict(ridge.mod, s = 0, type="coefficients")[1:55,]
 ```
 
@@ -848,7 +848,7 @@ The minimal $\lambda$ value minimizing training MSE results to be `r cv.out$lamb
 
 ```{r cvridpred, echo=FALSE}
 ridge.pred=predict(ridge.mod,s=bestlam,newx=x_test)
-mean((ridge.pred-y_test)^2)
+#mean((ridge.pred-y_test)^2)
 out=glmnet(x,y,alpha=0)
 predict(out,type="coefficients",s=bestlam)[1:64,]
 sst <- sum((y_test - mean(y_test))^2)
@@ -868,17 +868,17 @@ set.seed(1)
 cv.out=cv.glmnet(x_train,y_train,alpha=1)
 plot(cv.out)
 ```
-Here, we see that the lowest MSE is when $\lambda$ equals 0.369. It has about 47 non-zero coefficients. 
 
 ```{r lassocoef, echo=FALSE} 
 bestlam=cv.out$lambda.min
 lasso.pred=predict(lasso.mod,s=bestlam,newx=x_test)
-mean((lasso.pred-y_test)^2)
+#mean((lasso.pred-y_test)^2)
 out = glmnet(x, y, alpha = 1, lambda = grid) # Fit lasso model on full dataset
 lasso_coef = predict(out, type = "coefficients", s = bestlam)[1:64,] # Display coefficients using λ chosen by CV
 lasso_coef
 lasso_coef[lasso_coef!=0]
 ```
+Here, we see that the lowest MSE is when $\lambda$ equals `r cv.out$lambda.min`. It has about 47 non-zero coefficients. The MSE is then `r mean((lasso.pred-y_test)^2)`.
 
 ```{r lasso R2, echo=FALSE}
 sst1 <- sum((y_test - mean(y_test))^2)

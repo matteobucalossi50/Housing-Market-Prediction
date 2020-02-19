@@ -1,5 +1,11 @@
 # DATS6101_Project
-Seattle Area Housing Market
+Predicted Seattle area housing prices using PCA, Tree-based models and linear regression models.
 
-This is a team repository for a housing market prediction model for the Seattle area based on the kc_house_data.csv dataset, retrieved on kaggle.com. Our initial EDA and visualization section can be found in the Project 1 folder, while use of regression models can be found in the Project 2 folder.
-We recommend patience in running Project 2 code, given the few minutes Random Forest usually takes to run. 
+# Repo Description:
+- EDA and visualization code can be found in the Project 1 folder.
+- Machine learning code can be found in the Project 2 folder.
+
+# Description of Files:
+- csv: The dataset used.
+- rmd: R markdown files that contain the code for analysis, visualisation and modeling of the data.
+- html: The files that are generated after knitting the .rmd files.

@@ -9,3 +9,4 @@ Predicted Seattle area housing prices using PCA, Tree-based models and linear re
 - .csv: The dataset used.
 - .rmd: R markdown files that contain the code for analysis, visualisation and modeling of the data.
 - .html: The files that are generated after knitting the .rmd files.
+- Code.R: overall code for the project in /Project2 folder.

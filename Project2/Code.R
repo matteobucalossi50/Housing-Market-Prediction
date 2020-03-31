@@ -29,6 +29,12 @@ library("tree")
 library('ISLR')
 library('randomForest')
 library('leaps')
+library("Rmisc")
+library("MASS")
+library("factoextra")
+library("pls")
+library("magrittr")
+library("glmnet")
 
 
 # Import and clean data
@@ -228,6 +234,166 @@ text(treepr.pred,cex=0.75, digits=3)
 # Random Forest - slow training (>10 minutes)
 ff1 <- randomForest(log(price)~bedrooms + bathrooms + sqft_living + sqft_lot + floors + condition + grade + sqft_above + sqft_basement+yr_built+yr_renovated, data = train.set, importance = TRUE)
 print(ff1)
+
+
+
+# data cleaning for PCA
+house <- data.frame(read.csv("kc_house_data.csv", header = TRUE))
+house2 <- subset(house,select = -c(id,date,waterfront,view,zipcode,lat,long,sqft_living15,sqft_lot15,yr_renovated))
+house2 <- drop_na(house2)
+corx=cor(house2[,-1])
+corx
+
+# PComponents
+prin_comp <- prcomp(scale(house2[,-1]))
+summary(prin_comp)
+prin_comp$center ##output the mean of variables
+prin_comp$scale ##output the sd of variables
+prin_comp$rotation ##variables in each component
+
+# plotting PCA
+fviz_eig(prin_comp)
+biplot(prin_comp, scale = 0)
+biplot(prin_comp,6:7, scale =0)
+
+pr.var <- (prin_comp$sdev^2)
+pve <- pr.var/sum(pr.var)
+plot(cumsum(pve), xlab="Principal Component (standardized)", ylab ="Cumulative Proportion of Variance Explained",ylim=c(0,1),type="b")
+
+# PCR model
+houseprice <- prin_comp$x
+modHouses <- lm(house2$price ~ houseprice[,1:7])
+summary(modHouses)
+
+# a full linear model seems to perform still better though
+fullmodel=lm(price~.-sqft_basement,data=house2)
+summary(fullmodel)
+
+par(mfrow = c(1,2))
+plot(house2$price, predict(modHouses), xlab = "actual price", ylab = "Predicted price", main = "PCR", abline(a = 0, b = 1, col = "red"))
+plot(house2$price, predict(fullmodel), xlab = "actual price", ylab = "Predicted price", main = "Full model", abline(a = 0, b = 1, col = "red"))
+
+
+
+# Using Ridge and Lasso regularizations
+
+# function 
+uzscale <- function(df, append=0, excl=NULL) { # Standardize dataframe to z scores, safe for non-numeric variables. 
+  append = ifelse(append==TRUE || append=="true" || append=="True" || append=="T" || append=="t" || append==1 || append=="1", TRUE, FALSE) 
+  nmax = length(df)
+  if (nmax < 1 || !is.numeric(nmax) ) { return(df) }
+  df1 = df
+  onames = colnames(df)  # the original column names
+  cnames = onames  # the new column names, if needed start with the original ones
+  znames = paste("z",cnames, sep="")     # new column names added prefix 'z'. Those are non-numeric will not be used.
+  nadd = ifelse(append, nmax, 0) # add to the column index or replace the orig columns
+  j=1  # counting index
+  for( i in 1:nmax ) {
+    if ( is.numeric(df[,i]) && !( i %in% excl || onames[i] %in% excl ) ) { 
+      df1[,j+nadd] = scale(df[,i])
+      cnames = c(cnames, znames[i])
+      j=j+1
+    } else if ( !append ) { j=j+1
+    } # if append == 1 and (colunm non-numeric or excluded), do not advance j.
+  }
+  if (append) { colnames(df1) <- cnames }
+  return(df1)
+}
+
+# preparing data for regularizations
+kc_house_data <- read.csv('kc_house_data.csv')
+kc_house_data <- subset(kc_house_data, select = -c(9, 10))
+kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms != 0)
+kc_house_data <- subset(kc_house_data, kc_house_data$bathrooms != 0)
+kc_house_data <- subset(kc_house_data, kc_house_data$bedrooms < 30)
+kc_house_data <-  drop_na(kc_house_data)
+
+
+# Ridge 
+kc_house_data$bedrooms <- as.factor(kc_house_data$bedrooms)
+kc_house_data$bathrooms <- as.factor(kc_house_data$bathrooms)
+kc_house_data$floors <- as.factor(kc_house_data$floors)
+kc_house_data$condition <- as.factor(kc_house_data$condition)
+kc_house_data$grade <- as.factor(kc_house_data$grade)
+
+house_unscale = uzscale(kc_house_data)
+x=model.matrix(price~.,house_unscale)[,-1]
+y=house_unscale$price
+grid=10^seq(10,-2,length=100)
+ridge.mod=glmnet(x,y,alpha=0,lambda=grid)
+print(dim(coef(ridge.mod)))
+plot(ridge.mod)
+
+# predicting with Ridge L2
+coef(ridge.mod)[,50]
+coef(ridge.mod)[,60] 
+predict(ridge.mod,s=50,type="coefficients")[1:55,]
+
+# training/test split
+set.seed(1)
+train = house_unscale %>% sample_frac(0.5)
+test = house_unscale %>% setdiff(train)
+
+x_train = model.matrix(price~., train)[,-1]
+x_test = model.matrix(price~., test)[,-1]
+
+y_train = train %>% dplyr::select(price) %>% unlist() # %>% as.numeric()
+y_test = test %>% dplyr::select(price) %>% unlist() # %>% as.numeric()
+
+# ridge model
+ridge.mod=glmnet(x_train,y_train,alpha=0,lambda=grid, thresh=1e-12)
+ridge.pred=predict(ridge.mod,s=4,newx=x_test)
+mean((mean(y_train)-y_test)^2) # the test set MSE
+
+ridge.pred=predict(ridge.mod,s=1e10,newx=x_test)
+ridge.pred = predict(ridge.mod, s = 0, newx = x_test)
+predict(ridge.mod, s = 0, type="coefficients")[1:55,]
+
+
+print(mean((ridge.pred - y_test)^2)) #MSE
+
+ols.mod = lm(price~., data = train) # old model
+summary(ols.mod)
+print(mean(residuals(ols.mod)^2)) #MSE
+
+# cross-validation
+set.seed(1)
+cv.out=cv.glmnet(x_train,y_train,alpha=0)  # Fit ridge regression model on training data
+plot(cv.out)
+bestlam = cv.out$lambda.min
+
+
+ridge.pred=predict(ridge.mod,s=bestlam,newx=x_test)
+mean((ridge.pred-y_test)^2)
+out=glmnet(x,y,alpha=0)
+predict(out,type="coefficients",s=bestlam)[1:64,]
+sst <- sum((y_test - mean(y_test))^2)
+sse <- sum((ridge.pred - y_test)^2)
+rsq <- 1 - sse / sst
+print(rsq)
+
+
+# Lasso regularization
+
+lasso.mod=glmnet(x_train,y_train,alpha=1,lambda=grid)
+plot(lasso.mod)
+set.seed(1)
+cv.out=cv.glmnet(x_train,y_train,alpha=1)
+plot(cv.out)
+
+
+bestlam=cv.out$lambda.min
+lasso.pred=predict(lasso.mod,s=bestlam,newx=x_test)
+mean((lasso.pred-y_test)^2)
+out = glmnet(x, y, alpha = 1, lambda = grid) # Fit lasso model on full dataset
+lasso_coef = predict(out, type = "coefficients", s = bestlam)[1:64,] # Display coefficients using λ chosen by CV
+lasso_coef
+lasso_coef[lasso_coef!=0]
+
+sst1 <- sum((y_test - mean(y_test))^2)
+sse1 <- sum((lasso.pred - y_test)^2)
+rsq1 <- 1 - sse1 / sst1
+print(rsq1)
 
 
 
